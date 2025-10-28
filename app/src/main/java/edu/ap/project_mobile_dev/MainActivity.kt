@@ -24,6 +24,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
+import edu.ap.project_mobile_dev.ui.add.AddScreen
 import edu.ap.project_mobile_dev.ui.home.HomeScreen
 import edu.ap.project_mobile_dev.ui.profile.ProfileScreen
 
@@ -65,10 +66,17 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate("profile") {
                                     popUpTo("home") { inclusive = true }
                                 }
-                            }
+                            },
+                             navController
                         )}
                         composable("profile") {
                             ProfileScreen(navController)
+                        }
+                        composable("add") {
+                            AddScreen(
+                                onNavigateBack = { navController.popBackStack() },
+                                onLocationAdded = { navController.popBackStack() }
+                            )
                         }
                     }
                 }
@@ -80,7 +88,7 @@ class MainActivity : ComponentActivity() {
         MaterialTheme(
             colorScheme = darkColorScheme(
                 primary = Color(0xFFFF6B35),
-                background = Color(0xFF1A2332),
+                background = Color(0xFF0F172A),
                 surface = Color(0xFF242F3F),
                 onPrimary = Color.White,
                 onBackground = Color.White,

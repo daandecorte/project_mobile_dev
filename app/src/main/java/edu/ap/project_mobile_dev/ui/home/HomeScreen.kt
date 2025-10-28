@@ -31,11 +31,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.ap.project_mobile_dev.ui.model.Activity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.navigation.NavController
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onActivityClick: (Activity) -> Unit,
     onProfileClick: () -> Unit,
+    navController: NavController,
     viewModel: HomeViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -78,7 +81,18 @@ fun HomeScreen(
                     containerColor = Color(0xFF1E2A3A)
                 )
             )
-        }
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navController.navigate("add") },
+                containerColor = Color(0xFFFF6B35),
+                contentColor = Color.White,
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Voeg activiteit toe")
+            }
+        },
+        floatingActionButtonPosition = FabPosition.End,
     ) { padding ->
         Column(
             modifier = Modifier
@@ -90,7 +104,7 @@ fun HomeScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 12.dp)
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 TabButton(
                     text = "Lijst",
@@ -121,7 +135,7 @@ fun HomeScreen(
                     )
                 }
             }
-            var isExpanded by remember { mutableStateOf(true) }
+            var isExpanded by remember { mutableStateOf(false) }
             if (uiState.selectedTab == 0) {
                 Column(
                     modifier = Modifier
