@@ -53,9 +53,20 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-                        composable("home") {
-                            HomeScreen(navController)
-                        }
+                        composable("home"){
+
+                         HomeScreen(
+                            onActivityClick = { activity ->
+                                navController.navigate("profile"/*"activity/${activity.id}"*/) {
+                                    popUpTo("home") { inclusive = false }
+                                }
+                            },
+                            onProfileClick = {
+                                navController.navigate("profile") {
+                                    popUpTo("home") { inclusive = true }
+                                }
+                            }
+                        )}
                         composable("profile") {
                             ProfileScreen(navController)
                         }
