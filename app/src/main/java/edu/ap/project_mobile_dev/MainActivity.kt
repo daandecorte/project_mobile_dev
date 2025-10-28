@@ -1,47 +1,81 @@
 package edu.ap.project_mobile_dev
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavController
+import com.google.firebase.FirebaseApp
+import edu.ap.project_mobile_dev.ui.login.LoginScreen
 import edu.ap.project_mobile_dev.ui.theme.Project_mobile_devTheme
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
+import edu.ap.project_mobile_dev.ui.home.HomeScreen
+import edu.ap.project_mobile_dev.ui.profile.ProfileScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseApp.initializeApp(this)
         enableEdgeToEdge()
         setContent {
-            Project_mobile_devTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+            CityTripTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    val navController = rememberNavController()
+                    val user = FirebaseAuth.getInstance().currentUser
+
+                    NavHost(
+                        navController = navController,
+                        startDestination = if (user == null) "login" else "home"
+                    ) {
+                        composable("login") {
+                            LoginScreen(
+                                onLoginSuccess = {
+                                    navController.navigate("home") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
+                                }
+                            )
+                        }
+                        composable("home") {
+                            HomeScreen(navController)
+                        }
+                        composable("profile") {
+                            ProfileScreen(navController)
+                        }
+                    }
                 }
             }
         }
     }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    Project_mobile_devTheme {
-        Greeting("Android")
+    @Composable
+    fun CityTripTheme(content: @Composable () -> Unit) {
+        MaterialTheme(
+            colorScheme = darkColorScheme(
+                primary = Color(0xFFFF6B35),
+                background = Color(0xFF1A2332),
+                surface = Color(0xFF242F3F),
+                onPrimary = Color.White,
+                onBackground = Color.White,
+                onSurface = Color.White
+            ),
+            content = content
+        )
     }
 }
