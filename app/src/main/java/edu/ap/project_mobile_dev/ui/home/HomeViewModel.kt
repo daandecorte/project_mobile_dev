@@ -1,6 +1,8 @@
 package edu.ap.project_mobile_dev.ui.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -10,13 +12,12 @@ import edu.ap.project_mobile_dev.ui.model.Activity
 class HomeViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
-
+    private val db = FirebaseFirestore.getInstance()
     init {
         loadActivities()
     }
-
     private fun loadActivities() {
-        val activities = listOf(
+        var activities = listOf(
             Activity(
                 id = 1,
                 title = "Atomium",
@@ -91,14 +92,57 @@ class HomeViewModel : ViewModel() {
             )
         )
 
-        _uiState.update {
-            it.copy(
-                activities = activities,
-                filteredActivities = activities
+        db.collection("activities")
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val firebaseActivities = snapshot.documents.mapNotNull { doc ->
+                    try {
+                        Activity(
+                            id = (doc.getLong("id") ?: 0L).toInt(),
+                            title = doc.getString("title") ?: "",
+                            description = doc.getString("description") ?: "",
+                            imageUrl = doc.getString("imageUrl") ?: "",
+                            category = doc.getString("category") ?: "",
+                            location = doc.getString("location") ?: "",
+                            city = doc.getString("city") ?: ""
+                        )
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+
+                //val allActivities = activities + firebaseActivities
+
+                _uiState.update {
+                    it.copy(
+                        activities = firebaseActivities,
+                        filteredActivities = firebaseActivities
+                    )
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", "Failed to load activities", e)
+            }
+
+//            .addOnFailureListener { e ->
+//                // Optional: handle error
+//                _uiState.update {
+//                    it.copy(
+//                        activities = activities,
+//                        filteredActivities = activities
+//                    )
+//                }
+//            }
+    }
+    fun addActivity(activity: Activity) {
+        _uiState.update { currentState ->
+            val updatedActivities = currentState.activities + activity
+            currentState.copy(
+                activities = updatedActivities,
+                filteredActivities = updatedActivities
             )
         }
     }
-
     fun updateSearchQuery(query: String) {
         _uiState.update {
             it.copy(searchQuery = query)

@@ -20,13 +20,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import edu.ap.project_mobile_dev.ui.model.Activity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddScreen(
     viewModel: AddViewModel = viewModel(),
     onNavigateBack: () -> Unit,
-    onLocationAdded: () -> Unit
+    onLocationAdded: (Activity) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -66,7 +67,7 @@ fun AddScreen(
 
             // Naam van de locatie
             LocationNameField(
-                value = uiState.locationName,
+                value = uiState.name,
                 onValueChange = { viewModel.updateLocationName(it) }
             )
 
@@ -105,8 +106,9 @@ fun AddScreen(
             // Locatie Opslaan button
             Button(
                 onClick = {
-                    viewModel.saveLocation()
-                    onLocationAdded()
+                    viewModel.saveLocation(onSuccess = {
+                        newActivity -> onLocationAdded(newActivity)
+                    })
                 },
                 modifier = Modifier
                     .fillMaxWidth()

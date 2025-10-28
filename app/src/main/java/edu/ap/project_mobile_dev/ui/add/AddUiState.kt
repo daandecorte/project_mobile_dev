@@ -1,7 +1,7 @@
 package edu.ap.project_mobile_dev.ui.add
 
 data class AddUiState(
-    val locationName: String = "",
+    val name: String = "",
     val city: String = "",
     val description: String = "",
     val selectedCategory: Category? = null,

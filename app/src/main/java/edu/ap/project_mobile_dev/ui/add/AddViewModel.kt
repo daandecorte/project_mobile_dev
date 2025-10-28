@@ -2,19 +2,23 @@ package edu.ap.project_mobile_dev.ui.add
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.firestore.FirebaseFirestore
+import edu.ap.project_mobile_dev.ui.model.Activity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class AddViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddUiState())
     val uiState: StateFlow<AddUiState> = _uiState.asStateFlow()
 
+    private val db = FirebaseFirestore.getInstance()
     fun updateLocationName(name: String) {
-        _uiState.update { it.copy(locationName = name) }
+        _uiState.update { it.copy(name = name) }
         validateForm()
     }
 
@@ -33,45 +37,49 @@ class AddViewModel : ViewModel() {
     }
 
     fun onPhotoClick() {
-        // Hier zou je de camera/gallery picker triggeren
-        // Voor nu updaten we alleen de state
+
         viewModelScope.launch {
-            // Implementatie voor foto selectie
-            // bijvoorbeeld met ActivityResultContracts
+
         }
     }
 
     fun useCurrentLocation() {
         viewModelScope.launch {
-            // Hier zou je de GPS locatie ophalen
-            // Voor nu zetten we een placeholder stad
+
             _uiState.update { it.copy(city = "Antwerpen", isUsingCurrentLocation = true) }
             validateForm()
         }
     }
 
-    fun saveLocation() {
-        if (_uiState.value.isFormValid) {
+    fun saveLocation(onSuccess: (Activity) -> Unit) {
+        if(_uiState.value.isFormValid) {
             viewModelScope.launch {
-                // Hier zou je de locatie opslaan in je database/repository
-                // bijvoorbeeld:
-                // locationRepository.saveLocation(
-                //     name = _uiState.value.locationName,
-                //     city = _uiState.value.city,
-                //     category = _uiState.value.selectedCategory,
-                //     description = _uiState.value.description,
-                //     photoUri = _uiState.value.photoUri
-                // )
-
-                // Reset form na opslaan
-                resetForm()
+                try{
+                    val newActivity = Activity(
+                        id = 1, // bv. System.currentTimeMillis().toInt()
+                        title = _uiState.value.name,
+                        description = _uiState.value.description,
+                        imageUrl = "", // of de URL van een foto
+                        category = _uiState.value.selectedCategory?.displayName ?: "",
+                        location = _uiState.value.city,
+                        city = _uiState.value.city
+                    )
+                    db.collection("activities")
+                        .add(newActivity)
+                        .addOnSuccessListener {
+                            resetForm()
+                            onSuccess(newActivity)
+                        }
+                }catch (e: Exception) {
+                    println("error saving to firebase: ${e.message}")
+                }
             }
         }
     }
 
     private fun validateForm() {
         val state = _uiState.value
-        val isValid = state.locationName.isNotBlank() &&
+        val isValid = state.name.isNotBlank() &&
                 state.city.isNotBlank() &&
                 state.selectedCategory != null
 

@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.firebase.FirebaseApp
 import edu.ap.project_mobile_dev.ui.login.LoginScreen
@@ -24,14 +25,17 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import edu.ap.project_mobile_dev.ui.add.AddScreen
 import edu.ap.project_mobile_dev.ui.home.HomeScreen
+import edu.ap.project_mobile_dev.ui.home.HomeViewModel
 import edu.ap.project_mobile_dev.ui.profile.ProfileScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
+        FirebaseFirestore.setLoggingEnabled(true)
         enableEdgeToEdge()
         setContent {
             CityTripTheme {
@@ -40,6 +44,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val navController = rememberNavController()
                     val user = FirebaseAuth.getInstance().currentUser
+                    val homeViewModel: HomeViewModel = viewModel()
 
                     NavHost(
                         navController = navController,
@@ -67,7 +72,8 @@ class MainActivity : ComponentActivity() {
                                     popUpTo("home") { inclusive = true }
                                 }
                             },
-                             navController
+                             navController,
+                             homeViewModel
                         )}
                         composable("profile") {
                             ProfileScreen(navController)
@@ -75,7 +81,10 @@ class MainActivity : ComponentActivity() {
                         composable("add") {
                             AddScreen(
                                 onNavigateBack = { navController.popBackStack() },
-                                onLocationAdded = { navController.popBackStack() }
+                                onLocationAdded = { newActivity ->
+                                    homeViewModel.addActivity(newActivity)  // update HomeViewModel
+                                    navController.popBackStack()           // ga terug naar HomeScreen
+                                }
                             )
                         }
                     }
