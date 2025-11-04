@@ -125,137 +125,122 @@ fun ActivityScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF0F172A)),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(0.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Header Card
         item {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                color = Color(0xFF1E2A3A)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp) // adjust as you like
             ) {
-                Column {
-                    // Image
+                // Background Image
+                bitmap?.let {
+                    Image(
+                        bitmap = it.asImageBitmap(),
+                        contentDescription = "Activity image",
+                        modifier = Modifier
+                            .fillMaxSize(),  // full width + height
+                        contentScale = ContentScale.Crop
+                    )
+                } ?: run {
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(250.dp)
-                            .background(Color(0xFF2C3E50))
+                            .fillMaxSize()
+                            .background(Color(0xFF2C3E50)),
+                        contentAlignment = Alignment.Center
                     ) {
-                        // Placeholder
-                        bitmap?.let {
-                            Image(
-                                bitmap = it.asImageBitmap(),
-                                contentDescription = "Activity image",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
+                        Icon(
+                            Icons.Default.Image,
+                            contentDescription = null,
+                            tint = Color(0xFF6B7A8F),
+                            modifier = Modifier.size(64.dp)
+                        )
+                    }
+                }
+
+                // Overlay gradient (optional for contrast)
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color(0xCC0F172A)),
+                                startY = 100f
                             )
-                        } ?: run {
-                            // Show placeholder if image is null
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    Icons.Default.Image,
-                                    contentDescription = null,
-                                    tint = Color(0xFF6B7A8F),
-                                    modifier = Modifier.size(64.dp)
-                                )
-                            }
-                        }
+                        )
+                )
 
-                        // Back
-                        Row(
-                            modifier = Modifier.fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ){
-                            IconButton(
-                                onClick = onBack,
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .padding(5.dp)
-                                    .background(Color(0xFF1E2A3A), CircleShape)
-                            ) {
-                                Icon(
-                                    Icons.Default.ArrowBack,
-                                    contentDescription = "Terug",
-                                    tint = Color.White
-                                )
-                            }
+                // Top bar (back + profile)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier
+                            .background(Color(0x80000000), CircleShape)
+                            .size(36.dp)
+                    ) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Terug", tint = Color.White)
+                    }
 
-                            Spacer(modifier = Modifier.weight(1f))
+                    IconButton(onClick = onProfileClick) {
+                        Icon(Icons.Default.AccountCircle, contentDescription = "Profiel", tint = Color.White)
+                    }
+                }
 
-                            IconButton(onClick = onProfileClick) {
-                                Icon(
-                                    Icons.Default.AccountCircle,
-                                    contentDescription = "Profiel",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(40.dp)
-                                )
-                            }
-                        }
-                        // Category, Title, Review stats
-                        Column(
-                            modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
-                        ) {
-                            Surface(
-                                modifier = Modifier.padding(vertical = 8.dp),
-                                color = Color(0xFFFF6B35),
-                                shape = RoundedCornerShape(14.dp)
-                            ) {
-                                Text(
-                                    activity.category.displayName,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                    color = Color.White,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                            Text(
-                                activity.title,
-                                fontSize = 30.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
+                // Bottom section: title + stats
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(16.dp)
+                ) {
+                    Surface(
+                        color = Color(0xFFFF6B35),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Text(
+                            activity.category.displayName,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Text(
+                        activity.title,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 6.dp)) {
+                        Text("4.5", fontSize = 20.sp, color = Color.White)
+                        repeat(5) {
+                            Icon(
+                                Icons.Default.Star,
+                                contentDescription = null,
+                                tint = Color(0xFFFFC107),
+                                modifier = Modifier.size(18.dp).padding(horizontal = 2.dp)
                             )
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(top = 8.dp)
-                            ) {
-                                Text(
-                                    "4.5",
-                                    fontSize = 22.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                                repeat(5) {
-                                    Icon(
-                                        Icons.Default.Star,
-                                        contentDescription = null,
-                                        tint = Color(0xFFFFC107),
-                                        modifier = Modifier.size(22.dp).padding(horizontal = 2.dp)
-                                    )
-                                }
-                                Text(
-                                    "(127 reviews)",
-                                    color = Color(0xFFB0BEC5),
-                                    fontSize = 12.sp,
-                                    modifier = Modifier.padding(start = 4.dp)
-                                )
-                            }
                         }
+                        Text("(127 reviews)", color = Color(0xFFB0BEC5), fontSize = 12.sp, modifier = Modifier.padding(start = 4.dp))
                     }
                 }
             }
         }
 
+
         // Tabs
         item {
-            Row(modifier = Modifier.fillMaxWidth()) {
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                 Button(
                     onClick = { viewModel.changeSelectedTab(0) },
                     modifier = Modifier
@@ -293,7 +278,7 @@ fun ActivityScreen(
         // Location Card
         item {
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(12.dp),
                 color = Color(0xFF1E2A3A)
             ) {
@@ -358,7 +343,7 @@ fun ActivityScreen(
         // About Section
         item {
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(12.dp),
                 color = Color(0xFF1E2A3A)
             ) {
@@ -382,7 +367,7 @@ fun ActivityScreen(
         // Reviews Section
         item {
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(12.dp),
                 color = Color(0xFF1E2A3A)
             ) {
@@ -414,7 +399,7 @@ fun ActivityScreen(
         // Write Review Section
         item {
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(12.dp),
                 color = Color(0xFF1E2A3A)
             ) {
