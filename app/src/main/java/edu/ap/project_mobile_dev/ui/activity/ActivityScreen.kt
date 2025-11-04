@@ -176,7 +176,7 @@ fun ActivityScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .padding(horizontal = 16.dp, vertical = 30.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -186,11 +186,11 @@ fun ActivityScreen(
                             .background(Color(0x80000000), CircleShape)
                             .size(36.dp)
                     ) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Terug", tint = Color.White)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Terug", tint = Color.White, modifier = Modifier.size(28.dp))
                     }
 
                     IconButton(onClick = onProfileClick) {
-                        Icon(Icons.Default.AccountCircle, contentDescription = "Profiel", tint = Color.White)
+                        Icon(Icons.Default.AccountCircle, contentDescription = "Profiel", tint = Color.White, modifier = Modifier.size(40.dp))
                     }
                 }
 
