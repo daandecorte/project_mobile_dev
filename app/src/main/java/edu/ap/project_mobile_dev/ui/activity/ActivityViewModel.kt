@@ -2,7 +2,6 @@ package edu.ap.project_mobile_dev.ui.activity
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
 import edu.ap.project_mobile_dev.ui.add.Category
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +21,6 @@ class ActivityViewModel : ViewModel() {
             return
         }
 
-        // set loading
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
         db.collection("activities")
@@ -50,5 +48,9 @@ class ActivityViewModel : ViewModel() {
                 _uiState.update { it.copy(errorMessage = e.message ?: "Failed to load", isLoading = false) }
                 Log.e("Firestore", "Failed to load activity", e)
             }
+    }
+
+    fun changeSelectedTab(tab: Int){
+        _uiState.update { it.copy(selectedTab = tab) }
     }
 }

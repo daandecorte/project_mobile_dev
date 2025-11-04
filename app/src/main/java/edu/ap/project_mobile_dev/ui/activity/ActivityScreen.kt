@@ -1,5 +1,8 @@
 package edu.ap.project_mobile_dev.ui.activity
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,11 +16,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import edu.ap.project_mobile_dev.ui.model.Activity
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.foundation.Image
+
 
 data class Review(
     val userName: String,
@@ -80,7 +86,6 @@ fun ActivityScreen(
         return
     }
 
-    var selectedTab by remember { mutableStateOf(0) }
     var userRating by remember { mutableStateOf(0) }
     var reviewText by remember { mutableStateOf("") }
 
@@ -103,6 +108,18 @@ fun ActivityScreen(
             likes = 8
         )
     )
+
+    fun decodeBase64ToBitmap(base64String: String): Bitmap? {
+        return try {
+            val decodedBytes = Base64.decode(base64String, Base64.DEFAULT)
+            BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    val bitmap = decodeBase64ToBitmap(activity.imageUrl)
 
     LazyColumn(
         modifier = Modifier
@@ -127,16 +144,26 @@ fun ActivityScreen(
                             .background(Color(0xFF2C3E50))
                     ) {
                         // Placeholder
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Default.Image,
-                                contentDescription = null,
-                                tint = Color(0xFF6B7A8F),
-                                modifier = Modifier.size(64.dp)
+                        bitmap?.let {
+                            Image(
+                                bitmap = it.asImageBitmap(),
+                                contentDescription = "Activity image",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
                             )
+                        } ?: run {
+                            // Show placeholder if image is null
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.Image,
+                                    contentDescription = null,
+                                    tint = Color(0xFF6B7A8F),
+                                    modifier = Modifier.size(64.dp)
+                                )
+                            }
                         }
 
                         // Back
@@ -230,12 +257,12 @@ fun ActivityScreen(
         item {
             Row(modifier = Modifier.fillMaxWidth()) {
                 Button(
-                    onClick = { selectedTab = 0 },
+                    onClick = { viewModel.changeSelectedTab(0) },
                     modifier = Modifier
                         .weight(1f)
                         .height(48.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selectedTab == 0) Color(0xFFFF6B35) else Color(0xFF2C3E50)
+                        containerColor = if (uiState.selectedTab == 0) Color(0xFFFF6B35) else Color(0xFF2C3E50)
                     ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
@@ -243,12 +270,12 @@ fun ActivityScreen(
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
-                    onClick = { selectedTab = 1 },
+                    onClick = { viewModel.changeSelectedTab(1) },
                     modifier = Modifier
                         .weight(1f)
                         .height(48.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selectedTab == 1) Color(0xFFFF6B35) else Color(0xFF2C3E50)
+                        containerColor = if (uiState.selectedTab == 1) Color(0xFFFF6B35) else Color(0xFF2C3E50)
                     ),
                     shape = RoundedCornerShape(8.dp)
                 ) {

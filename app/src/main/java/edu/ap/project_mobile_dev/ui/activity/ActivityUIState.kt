@@ -5,5 +5,6 @@ import edu.ap.project_mobile_dev.ui.model.Activity
 data class ActivityUIState(
     val activity: Activity? = null,
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val selectedTab: Int = 0
 )
