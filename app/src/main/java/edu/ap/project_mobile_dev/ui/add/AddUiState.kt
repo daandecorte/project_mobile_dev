@@ -1,5 +1,6 @@
 package edu.ap.project_mobile_dev.ui.add
 
+
 data class AddUiState(
     val name: String = "",
     val city: String = "",
@@ -9,5 +10,6 @@ data class AddUiState(
     val isUsingCurrentLocation: Boolean = false,
     val isFormValid: Boolean = false,
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val photoBase64: String = ""
 )

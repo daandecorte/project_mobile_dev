@@ -1,20 +1,28 @@
 package edu.ap.project_mobile_dev.ui.add
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.net.Uri
+import android.provider.MediaStore
+import android.util.Base64
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
 import edu.ap.project_mobile_dev.ui.model.Activity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.io.ByteArrayOutputStream
 
 class AddViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddUiState())
     val uiState: StateFlow<AddUiState> = _uiState.asStateFlow()
+    val MAX_FIRESTORE_IMAGE_SIZE = 1048487
 
     private val db = FirebaseFirestore.getInstance()
     fun updateLocationName(name: String) {
@@ -36,13 +44,31 @@ class AddViewModel : ViewModel() {
         validateForm()
     }
 
-    fun onPhotoClick() {
+    fun onPhotoSelected(uri: Uri, context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+            val compressedBase64 = bitmapToBase64(bitmap)
+            if (compressedBase64.length > MAX_FIRESTORE_IMAGE_SIZE) {
+                _uiState.update { current ->
+                    current.copy(errorMessage = "Afbeelding is te groot")
+                }
+                return@launch
+            }
 
-        viewModelScope.launch {
-
+            _uiState.update { current ->
+                current.copy(
+                    photoUri = uri.toString(),
+                    photoBase64 = compressedBase64
+                )
+            }
         }
     }
-
+    fun bitmapToBase64(bitmap: Bitmap): String {
+        val outputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 50, outputStream) // compress to reduce size
+        val byteArray = outputStream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.DEFAULT)
+    }
     fun useCurrentLocation() {
         viewModelScope.launch {
 
@@ -59,8 +85,8 @@ class AddViewModel : ViewModel() {
                         id = 1, // bv. System.currentTimeMillis().toInt()
                         title = _uiState.value.name,
                         description = _uiState.value.description,
-                        imageUrl = "", // of de URL van een foto
-                        category = _uiState.value.selectedCategory?.displayName ?: "",
+                        imageUrl = _uiState.value.photoBase64 ?: "",
+                        category = _uiState.value.selectedCategory ?: Category.OTHER,
                         location = _uiState.value.city,
                         city = _uiState.value.city
                     )

@@ -31,7 +31,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.ap.project_mobile_dev.ui.model.Activity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.navigation.NavController
+import edu.ap.project_mobile_dev.ui.add.Category
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -225,9 +227,9 @@ fun HomeScreen(
                             ) {
                                 categories.forEach { category ->
                                     CategoryChip(
-                                        text = category,
-                                        selected = uiState.selectedCategories.contains(category),
-                                        onClick = { viewModel.toggleCategory(category) }
+                                        category = category,
+                                        selected = uiState.selectedCategories.contains(category.displayName),
+                                        onClick = { viewModel.toggleCategory(category.displayName) }
                                     )
                                 }
                             }
@@ -288,18 +290,28 @@ fun TabButton(
 }
 
 @Composable
-fun CategoryChip(text: String, selected: Boolean, onClick: () -> Unit) {
+fun CategoryChip(category: Category, selected: Boolean, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(20.dp),
         color = if (selected) Color(0xFFFF6B35) else Color(0xFF334155)
     ) {
-        Text(
-            text,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            color = Color.White,
-            fontSize = 14.sp
-        )
+        Row(
+            modifier = Modifier.padding(start = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = category.icon,
+                contentDescription = "icon",
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                category.displayName,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).offset((-6).dp),
+                color = Color.White,
+                fontSize = 14.sp
+            )
+        }
     }
 }
 
@@ -347,12 +359,22 @@ fun ActivityCard(activity: Activity, onClick: () -> Unit) {
                 shape = RoundedCornerShape(16.dp),
                 color = Color(0xFFFF6B35)
             ) {
-                Text(
-                    activity.category,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                    color = Color.White,
-                    fontSize = 12.sp
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(start = 10.dp)
+                ) {
+                    Icon(
+                        imageVector = activity.category.icon,
+                        contentDescription = "Icon",
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        activity.category.displayName,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp).offset(-4.dp),
+                        color = Color.White,
+                        fontSize = 12.sp
+                    )
+                }
             }
         }
     }

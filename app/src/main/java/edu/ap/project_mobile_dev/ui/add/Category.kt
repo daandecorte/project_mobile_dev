@@ -2,6 +2,7 @@ package edu.ap.project_mobile_dev.ui.add
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Hotel
 import androidx.compose.material.icons.filled.LocalCafe
 import androidx.compose.material.icons.filled.MusicNote
@@ -21,5 +22,6 @@ enum class Category(    val displayName: String,
     SHOPPING("Shopping", Icons.Default.ShoppingBag),
     NIGHTLIFE("Nightlife", Icons.Default.MusicNote),
     CULTURE("Cultuur", Icons.Default.TheaterComedy),
-    SPORT("Sport", Icons.Default.Sports)
+    SPORT("Sport", Icons.Default.Sports),
+    OTHER("Other", Icons.Default.Android)
 }

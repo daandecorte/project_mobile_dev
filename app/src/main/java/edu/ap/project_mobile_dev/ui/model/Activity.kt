@@ -7,7 +7,7 @@ data class Activity(
     val title: String,
     val description: String,
     val imageUrl: String,
-    val category: String,
+    val category: Category,
     val location: String,
     val city: String
 )

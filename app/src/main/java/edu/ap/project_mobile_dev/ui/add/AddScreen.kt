@@ -1,5 +1,9 @@
 package edu.ap.project_mobile_dev.ui.add
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,13 +17,19 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberAsyncImagePainter
 import edu.ap.project_mobile_dev.ui.model.Activity
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,7 +40,6 @@ fun AddScreen(
     onLocationAdded: (Activity) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -59,13 +68,32 @@ fun AddScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            val context = LocalContext.current
+            val photoPickerLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.PickVisualMedia()
+            ) { uri ->
+                uri?.let {
+                    viewModel.onPhotoSelected(it, context)
+                }
+            }
             // Foto sectie
+            if (uiState.errorMessage != null) {
+                Text(
+                    text = uiState.errorMessage ?: "",
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
             PhotoSection(
                 photoUri = uiState.photoUri,
-                onPhotoClick = { viewModel.onPhotoClick() }
+                onPhotoClick = {
+                photoPickerLauncher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            }
             )
 
-            // Naam van de locatie
             LocationNameField(
                 value = uiState.name,
                 onValueChange = { viewModel.updateLocationName(it) }
@@ -150,27 +178,33 @@ private fun PhotoSection(
             .clickable(onClick = onPhotoClick),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.PhotoCamera,
-                contentDescription = "Upload foto",
-                tint = Color(0xFF7A8694),
-                modifier = Modifier.size(48.dp)
-            )
-            Text(
-                text = "Klik om foto te uploaden",
-                color = Color(0xFF7A8694),
-                fontSize = 14.sp
-            )
-            Text(
-                text = "of sleep je camera",
-                color = Color(0xFF5A6470),
-                fontSize = 12.sp
+        if(photoUri!=null) {
+            Image(
+                painter = rememberAsyncImagePainter(photoUri),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp))
             )
         }
+        else {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PhotoCamera,
+                    contentDescription = "Upload foto",
+                    tint = Color(0xFF7A8694),
+                    modifier = Modifier.size(48.dp)
+                )
+                Text(
+                    text = "Klik om foto te uploaden",
+                    color = Color(0xFF7A8694),
+                    fontSize = 14.sp
+                )
+            }
+        }
+
     }
 }
 
