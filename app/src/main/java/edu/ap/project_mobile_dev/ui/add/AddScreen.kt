@@ -30,14 +30,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
-import edu.ap.project_mobile_dev.ui.model.Activity
+import edu.ap.project_mobile_dev.ui.model.ActivityPost
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddScreen(
     viewModel: AddViewModel = viewModel(),
     onNavigateBack: () -> Unit,
-    onLocationAdded: (Activity) -> Unit
+    onLocationAdded: (ActivityPost) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     Scaffold(

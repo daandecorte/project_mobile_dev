@@ -83,7 +83,7 @@ class MainActivity : ComponentActivity() {
                             AddScreen(
                                 onNavigateBack = { navController.popBackStack() },
                                 onLocationAdded = { newActivity ->
-                                    homeViewModel.addActivity(newActivity)  // update HomeViewModel
+                                    homeViewModel.loadActivities()  // update HomeViewModel
                                     navController.popBackStack()           // ga terug naar HomeScreen
                                 }
                             )

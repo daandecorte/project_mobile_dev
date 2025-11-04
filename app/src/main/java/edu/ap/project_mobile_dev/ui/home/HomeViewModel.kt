@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import edu.ap.project_mobile_dev.ui.model.ActivityPost
 import edu.ap.project_mobile_dev.ui.model.Activity
 import kotlinx.coroutines.launch
 
@@ -29,18 +30,16 @@ class HomeViewModel : ViewModel() {
             loadActivities()
         }
     }
-    private fun loadActivities() {
+    fun loadActivities() {
         db.collection("activities")
             .get()
             .addOnSuccessListener { snapshot ->
                 val firebaseActivities = snapshot.documents.mapNotNull { doc ->
                     try {
                         Activity(
-                            id = (doc.getLong("id") ?: 0L).toInt(),
                             documentId = doc.id,
                             title = doc.getString("title") ?: "",
                             description = doc.getString("description") ?: "",
-                            imageUrl = doc.getString("imageUrl") ?: "",
                             category = Category.valueOf(doc.getString("category") ?: "OTHER"),
                             location = doc.getString("location") ?: "",
                             city = doc.getString("city") ?: ""
@@ -61,15 +60,6 @@ class HomeViewModel : ViewModel() {
             .addOnFailureListener { e ->
                 Log.e("Firestore", "Failed to load activities", e)
             }
-    }
-    fun addActivity(activity: Activity) {
-        _uiState.update { currentState ->
-            val updatedActivities = currentState.activities + activity
-            currentState.copy(
-                activities = updatedActivities,
-                filteredActivities = updatedActivities
-            )
-        }
     }
     fun updateSearchQuery(query: String) {
         _uiState.update {
