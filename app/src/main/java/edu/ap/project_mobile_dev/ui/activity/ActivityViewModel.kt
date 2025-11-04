@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import edu.ap.project_mobile_dev.ui.model.Activity
+import edu.ap.project_mobile_dev.ui.model.ActivityDetail
 
 class ActivityViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(ActivityUIState())
@@ -28,15 +29,16 @@ class ActivityViewModel : ViewModel() {
             .get()
             .addOnSuccessListener { doc ->
                 if (doc.exists()) {
-                    val activity = Activity(
-                        id = (doc.getLong("id") ?: 0L).toInt(),
+                    val activity = ActivityDetail(
                         documentId = doc.id,
                         title = doc.getString("title") ?: "",
                         description = doc.getString("description") ?: "",
-                        imageUrl = doc.getString("imageUrl") ?: "",
+                        baseImageUrl = doc.getString("imageUrl") ?: "",
                         category = Category.valueOf(doc.getString("category") ?: "OTHER"),
                         location = doc.getString("location") ?: "",
-                        city = doc.getString("city") ?: ""
+                        city = doc.getString("city") ?: "",
+                        ratingM = 0,
+                        ratings = emptyList(),
                     )
                     _uiState.update { it.copy(activity = activity, isLoading = false) }
                 } else {

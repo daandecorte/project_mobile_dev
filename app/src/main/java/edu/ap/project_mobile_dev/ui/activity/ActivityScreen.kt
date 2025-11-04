@@ -119,7 +119,7 @@ fun ActivityScreen(
         }
     }
 
-    val bitmap = decodeBase64ToBitmap(activity.imageUrl)
+    val bitmap = decodeBase64ToBitmap(activity.baseImageUrl)
 
     LazyColumn(
         modifier = Modifier

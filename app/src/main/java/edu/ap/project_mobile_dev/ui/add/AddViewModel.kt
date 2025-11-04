@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.io.ByteArrayOutputStream
 import androidx.core.graphics.scale
+import edu.ap.project_mobile_dev.ui.model.ActivityPost
 
 class AddViewModel : ViewModel() {
 
@@ -95,20 +96,18 @@ class AddViewModel : ViewModel() {
         }
     }
 
-    fun saveLocation(onSuccess: (Activity) -> Unit) {
+    fun saveLocation(onSuccess: (ActivityPost) -> Unit) {
         if(_uiState.value.isFormValid) {
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true) }
                 try{
-                    val newActivity = Activity(
-                        id = 1, // bv. System.currentTimeMillis().toInt()
+                    val newActivity = ActivityPost(
                         title = _uiState.value.name,
                         description = _uiState.value.description,
                         imageUrl = _uiState.value.photoBase64 ?: "",
                         category = _uiState.value.selectedCategory ?: Category.OTHER,
                         location = _uiState.value.city,
                         city = _uiState.value.city,
-                        documentId = ""
                     )
                     db.collection("activities")
                         .add(newActivity)
