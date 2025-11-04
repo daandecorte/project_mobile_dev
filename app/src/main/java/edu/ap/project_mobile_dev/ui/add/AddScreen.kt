@@ -88,10 +88,11 @@ fun AddScreen(
             PhotoSection(
                 photoUri = uiState.photoUri,
                 onPhotoClick = {
-                photoPickerLauncher.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                )
-            }
+                    photoPickerLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                },
+                isPhotoLoading=uiState.isPhotoLoading
             )
 
             LocationNameField(
@@ -147,11 +148,20 @@ fun AddScreen(
                 shape = RoundedCornerShape(12.dp),
                 enabled = uiState.isFormValid
             ) {
-                Text(
-                    text = "Locatie Opslaan",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                if(uiState.isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 3.dp
+                    )
+                }
+                else {
+                    Text(
+                        text = "Locatie Opslaan",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
@@ -160,7 +170,8 @@ fun AddScreen(
 @Composable
 private fun PhotoSection(
     photoUri: String?,
-    onPhotoClick: () -> Unit
+    onPhotoClick: () -> Unit,
+    isPhotoLoading: Boolean
 ) {
     Box(
         modifier = Modifier
@@ -178,30 +189,40 @@ private fun PhotoSection(
             .clickable(onClick = onPhotoClick),
         contentAlignment = Alignment.Center
     ) {
-        if(photoUri!=null) {
-            Image(
-                painter = rememberAsyncImagePainter(photoUri),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp))
-            )
-        }
-        else {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.PhotoCamera,
-                    contentDescription = "Upload foto",
-                    tint = Color(0xFF7A8694),
-                    modifier = Modifier.size(48.dp)
+        when {
+            isPhotoLoading -> {
+                CircularProgressIndicator(
+                    color = Color(0xFFFF6B35),
+                    strokeWidth = 3.dp
                 )
-                Text(
-                    text = "Klik om foto te uploaden",
-                    color = Color(0xFF7A8694),
-                    fontSize = 14.sp
+            }
+
+            photoUri != null -> {
+                Image(
+                    painter = rememberAsyncImagePainter(photoUri),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp))
                 )
+            }
+
+            else -> {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PhotoCamera,
+                        contentDescription = "Upload foto",
+                        tint = Color(0xFF7A8694),
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Text(
+                        text = "Klik om foto te uploaden",
+                        color = Color(0xFF7A8694),
+                        fontSize = 14.sp
+                    )
+                }
             }
         }
 

@@ -11,5 +11,6 @@ data class AddUiState(
     val isFormValid: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val photoBase64: String = ""
+    val photoBase64: String = "",
+    val isPhotoLoading: Boolean = false
 )

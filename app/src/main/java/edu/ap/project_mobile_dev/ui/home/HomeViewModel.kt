@@ -2,6 +2,7 @@ package edu.ap.project_mobile_dev.ui.home
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
 import edu.ap.project_mobile_dev.ui.add.Category
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import edu.ap.project_mobile_dev.ui.model.Activity
+import kotlinx.coroutines.launch
 
 class HomeViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -16,6 +18,16 @@ class HomeViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
     init {
         loadActivities()
+    }
+
+    fun refreshActivities() {
+        _uiState.update {
+            state -> state.copy(isRefreshing = true)
+        }
+
+        viewModelScope.launch {
+            loadActivities()
+        }
     }
     private fun loadActivities() {
         var activities = listOf<Activity>()
@@ -42,7 +54,8 @@ class HomeViewModel : ViewModel() {
                 _uiState.update {
                     it.copy(
                         activities = firebaseActivities,
-                        filteredActivities = firebaseActivities
+                        filteredActivities = firebaseActivities,
+                        isRefreshing = false
                     )
                 }
             }

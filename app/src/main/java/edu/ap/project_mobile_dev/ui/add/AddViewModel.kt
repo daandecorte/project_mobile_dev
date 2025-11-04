@@ -47,6 +47,7 @@ class AddViewModel : ViewModel() {
 
     fun onPhotoSelected(uri: Uri, context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
+            _uiState.update { it.copy(isPhotoLoading = true, errorMessage = null) }
             val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
             var quality = 80
             var base64: String
@@ -64,7 +65,8 @@ class AddViewModel : ViewModel() {
             _uiState.update { current ->
                 current.copy(
                     photoUri = uri.toString(),
-                    photoBase64 = base64
+                    photoBase64 = base64,
+                    isPhotoLoading = false
                 )
             }
             validateForm()
@@ -96,6 +98,7 @@ class AddViewModel : ViewModel() {
     fun saveLocation(onSuccess: (Activity) -> Unit) {
         if(_uiState.value.isFormValid) {
             viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true) }
                 try{
                     val newActivity = Activity(
                         id = 1, // bv. System.currentTimeMillis().toInt()

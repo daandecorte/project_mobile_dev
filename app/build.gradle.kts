@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
 
     implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.30.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

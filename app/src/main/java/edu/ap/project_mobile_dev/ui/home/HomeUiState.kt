@@ -7,5 +7,6 @@ data class HomeUiState(
     val selectedTab: Int = 0,
     val selectedCategories: Set<String> = emptySet(),
     val searchQuery: String = "",
-    val filteredActivities: List<Activity> = emptyList()
+    val filteredActivities: List<Activity> = emptyList(),
+    val isRefreshing: Boolean=false
 )

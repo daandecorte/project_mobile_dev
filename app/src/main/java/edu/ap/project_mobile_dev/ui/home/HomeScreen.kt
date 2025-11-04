@@ -33,7 +33,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.navigation.NavController
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import edu.ap.project_mobile_dev.ui.add.Category
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -238,20 +242,29 @@ fun HomeScreen(
                 }
 
                 // Activities List
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(0xFF0F172A)),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                if (uiState.selectedTab == 0) {
+                    val isRefreshing = uiState.isRefreshing // Boolean from ViewModel
+                    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
+                SwipeRefresh(
+                    state = swipeRefreshState,
+                    onRefresh = { viewModel.refreshActivities() } // Define this in ViewModel
                 ) {
-                    items(uiState.filteredActivities) { activity ->
-                        ActivityCard(
-                            activity = activity,
-                            onClick = { onActivityClick(activity) }
-                        )
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(0xFF0F172A)),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(uiState.filteredActivities) { activity ->
+                            ActivityCard(
+                                activity = activity,
+                                onClick = { onActivityClick(activity) }
+                            )
+                        }
                     }
                 }
+            }
             } else {
                 Box(
                     modifier = Modifier
