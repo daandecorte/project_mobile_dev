@@ -27,6 +27,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import edu.ap.project_mobile_dev.ui.add.AddScreen
+import edu.ap.project_mobile_dev.ui.detail.ActivityScreen
 import edu.ap.project_mobile_dev.ui.home.HomeScreen
 import edu.ap.project_mobile_dev.ui.home.HomeViewModel
 import edu.ap.project_mobile_dev.ui.profile.ProfileScreen
@@ -63,7 +64,7 @@ class MainActivity : ComponentActivity() {
 
                          HomeScreen(
                             onActivityClick = { activity ->
-                                navController.navigate("profile"/*"activity/${activity.id}"*/) {
+                                navController.navigate("activity") {
                                     popUpTo("home") { inclusive = false }
                                 }
                             },
@@ -85,6 +86,16 @@ class MainActivity : ComponentActivity() {
                                     homeViewModel.addActivity(newActivity)  // update HomeViewModel
                                     navController.popBackStack()           // ga terug naar HomeScreen
                                 }
+                            )
+                        }
+                        composable("activity") {
+                            ActivityScreen(
+                                onProfileClick = {
+                                    navController.navigate("profile") {
+                                        popUpTo("home") { inclusive = true }
+                                    }
+                                },
+                                onBack = { navController.popBackStack() }
                             )
                         }
                     }
