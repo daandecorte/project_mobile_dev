@@ -30,8 +30,11 @@ class HomeViewModel : ViewModel() {
         }
     }
     private fun loadActivities() {
+<<<<<<< HEAD
         var activities = listOf<Activity>()
 
+=======
+>>>>>>> ActivityDetail
         db.collection("activities")
             .get()
             .addOnSuccessListener { snapshot ->
@@ -39,6 +42,7 @@ class HomeViewModel : ViewModel() {
                     try {
                         Activity(
                             id = (doc.getLong("id") ?: 0L).toInt(),
+                            documentId = doc.id,
                             title = doc.getString("title") ?: "",
                             description = doc.getString("description") ?: "",
                             imageUrl = doc.getString("imageUrl") ?: "",

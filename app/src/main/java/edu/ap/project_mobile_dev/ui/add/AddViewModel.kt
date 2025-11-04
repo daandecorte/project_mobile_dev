@@ -107,7 +107,8 @@ class AddViewModel : ViewModel() {
                         imageUrl = _uiState.value.photoBase64 ?: "",
                         category = _uiState.value.selectedCategory ?: Category.OTHER,
                         location = _uiState.value.city,
-                        city = _uiState.value.city
+                        city = _uiState.value.city,
+                        documentId = ""
                     )
                     db.collection("activities")
                         .add(newActivity)
