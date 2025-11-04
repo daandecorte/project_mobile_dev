@@ -4,6 +4,7 @@ import edu.ap.project_mobile_dev.ui.add.Category
 
 data class Activity(
     val id: Int,
+    val documentId: String,
     val title: String,
     val description: String,
     val imageUrl: String,

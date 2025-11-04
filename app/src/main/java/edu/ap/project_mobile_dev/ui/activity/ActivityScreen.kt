@@ -1,9 +1,8 @@
-package edu.ap.project_mobile_dev.ui.detail
+package edu.ap.project_mobile_dev.ui.activity
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -17,8 +16,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import edu.ap.project_mobile_dev.ui.model.Activity
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 data class Review(
     val userName: String,
@@ -32,9 +31,55 @@ data class Review(
 
 @Composable
 fun ActivityScreen(
+    activityId: String,
     onProfileClick: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: ActivityViewModel = viewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(activityId) {
+        viewModel.loadActivity(activityId)
+    }
+
+    if (uiState.isLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF0F172A)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    uiState.errorMessage?.let { err ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF0F172A)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = err, color = Color.White)
+        }
+        return
+    }
+
+    val activity = uiState.activity
+
+    if (activity == null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF0F172A)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Geen activiteit geladen", color = Color.White)
+        }
+        return
+    }
+
     var selectedTab by remember { mutableStateOf(0) }
     var userRating by remember { mutableStateOf(0) }
     var reviewText by remember { mutableStateOf("") }
@@ -136,7 +181,7 @@ fun ActivityScreen(
                                 shape = RoundedCornerShape(14.dp)
                             ) {
                                 Text(
-                                    "category",
+                                    activity.category,
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                     color = Color.White,
                                     fontSize = 12.sp,
@@ -144,7 +189,7 @@ fun ActivityScreen(
                                 )
                             }
                             Text(
-                                "title",
+                                activity.title,
                                 fontSize = 30.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -241,7 +286,7 @@ fun ActivityScreen(
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                "city",
+                                activity.city,
                                 color = Color.White,
                                 modifier = Modifier.padding(start = 4.dp)
                             )
@@ -298,7 +343,7 @@ fun ActivityScreen(
                         color = Color.White
                     )
                     Text(
-                        "description",
+                        activity.description,
                         color = Color(0xFFB0BEC5),
                         modifier = Modifier.padding(top = 8.dp),
                         lineHeight = 20.sp

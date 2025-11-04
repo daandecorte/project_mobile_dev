@@ -62,7 +62,8 @@ class AddViewModel : ViewModel() {
                         imageUrl = "", // of de URL van een foto
                         category = _uiState.value.selectedCategory?.displayName ?: "",
                         location = _uiState.value.city,
-                        city = _uiState.value.city
+                        city = _uiState.value.city,
+                        documentId = ""
                     )
                     db.collection("activities")
                         .add(newActivity)
