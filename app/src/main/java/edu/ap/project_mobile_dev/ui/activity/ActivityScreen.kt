@@ -181,7 +181,7 @@ fun ActivityScreen(
                                 shape = RoundedCornerShape(14.dp)
                             ) {
                                 Text(
-                                    activity.category,
+                                    activity.category.displayName,
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                     color = Color.White,
                                     fontSize = 12.sp,

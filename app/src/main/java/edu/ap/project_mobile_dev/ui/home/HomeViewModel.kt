@@ -30,11 +30,6 @@ class HomeViewModel : ViewModel() {
         }
     }
     private fun loadActivities() {
-<<<<<<< HEAD
-        var activities = listOf<Activity>()
-
-=======
->>>>>>> ActivityDetail
         db.collection("activities")
             .get()
             .addOnSuccessListener { snapshot ->

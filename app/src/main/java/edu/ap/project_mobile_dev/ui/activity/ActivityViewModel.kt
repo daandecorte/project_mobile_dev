@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
+import edu.ap.project_mobile_dev.ui.add.Category
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,7 +36,7 @@ class ActivityViewModel : ViewModel() {
                         title = doc.getString("title") ?: "",
                         description = doc.getString("description") ?: "",
                         imageUrl = doc.getString("imageUrl") ?: "",
-                        category = doc.getString("category") ?: "",
+                        category = Category.valueOf(doc.getString("category") ?: "OTHER"),
                         location = doc.getString("location") ?: "",
                         city = doc.getString("city") ?: ""
                     )
