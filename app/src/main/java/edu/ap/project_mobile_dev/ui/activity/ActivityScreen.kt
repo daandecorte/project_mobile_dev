@@ -119,8 +119,6 @@ fun ActivityScreen(
         }
     }
 
-    val bitmap = decodeBase64ToBitmap(activity.baseImageUrl)
-
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -136,7 +134,7 @@ fun ActivityScreen(
                     .height(250.dp) // adjust as you like
             ) {
                 // Background Image
-                bitmap?.let {
+                uiState.activity?.bitmap?.let {
                     Image(
                         bitmap = it.asImageBitmap(),
                         contentDescription = "Activity image",

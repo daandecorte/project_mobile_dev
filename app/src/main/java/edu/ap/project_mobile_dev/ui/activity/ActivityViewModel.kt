@@ -1,5 +1,8 @@
 package edu.ap.project_mobile_dev.ui.activity
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.google.firebase.firestore.FirebaseFirestore
@@ -33,12 +36,12 @@ class ActivityViewModel : ViewModel() {
                         documentId = doc.id,
                         title = doc.getString("title") ?: "",
                         description = doc.getString("description") ?: "",
-                        baseImageUrl = doc.getString("imageUrl") ?: "",
                         category = Category.valueOf(doc.getString("category") ?: "OTHER"),
                         location = doc.getString("location") ?: "",
                         city = doc.getString("city") ?: "",
                         ratingM = 0,
                         ratings = emptyList(),
+                        bitmap = decodeBase64ToBitmap(doc.getString("imageUrl") ?: ""),
                     )
                     _uiState.update { it.copy(activity = activity, isLoading = false) }
                 } else {
@@ -54,5 +57,15 @@ class ActivityViewModel : ViewModel() {
 
     fun changeSelectedTab(tab: Int){
         _uiState.update { it.copy(selectedTab = tab) }
+    }
+
+    fun decodeBase64ToBitmap(base64String: String): Bitmap? {
+        return try {
+            val decodedBytes = Base64.decode(base64String, Base64.DEFAULT)
+            BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 }
