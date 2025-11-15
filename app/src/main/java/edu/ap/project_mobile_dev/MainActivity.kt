@@ -5,6 +5,8 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -63,21 +65,17 @@ class MainActivity : ComponentActivity() {
                         composable("home"){
 
                          HomeScreen(
-                            onActivityClick = { activity ->
-                                navController.navigate("activity/${activity.documentId}") {
-                                    popUpTo("home") { inclusive = false }
-                                }
-                            },
-                            onProfileClick = {
-                                navController.navigate("profile") {
-                                    popUpTo("home") { inclusive = true }
-                                }
-                            },
+                            onActivityClick = { activity -> navController.navigate("activity/${activity.documentId}") },
+                            onProfileClick = { navController.navigate("profile") },
                              navController,
                              homeViewModel
                         )}
                         composable("profile") {
-                            ProfileScreen(navController)
+                            ProfileScreen(
+                                navController,
+                                onBack = { navController.popBackStack()
+                                }
+                            )
                         }
                         composable("add") {
                             AddScreen(
@@ -95,9 +93,7 @@ class MainActivity : ComponentActivity() {
                             ActivityScreen(
                                 id,
                                 onProfileClick = {
-                                    navController.navigate("profile") {
-                                        popUpTo("home") { inclusive = true }
-                                    }
+                                    navController.navigate("profile")
                                 },
                                 onBack = { navController.popBackStack() }
                             )
@@ -117,8 +113,22 @@ class MainActivity : ComponentActivity() {
                 onPrimary = Color.White,
                 onBackground = Color.White,
                 onSurface = Color.White
-            ),
-            content = content
-        )
+            )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFF2C3E50),
+                                Color(0xFF0F172A)
+                            )
+                        )
+                    )
+            ) {
+                content()
+            }
+        }
     }
 }
