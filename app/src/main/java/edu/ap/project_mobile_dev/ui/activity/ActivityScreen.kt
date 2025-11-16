@@ -24,7 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.Brush
-
+import androidx.compose.ui.window.Dialog
 
 data class Review(
     val userName: String,
@@ -89,6 +89,7 @@ fun ActivityScreen(
 
     var userRating by remember { mutableStateOf(0) }
     var reviewText by remember { mutableStateOf("") }
+    var showReviewDialog by remember { mutableStateOf(false) }
 
     val reviews = listOf(
         Review(
@@ -109,16 +110,6 @@ fun ActivityScreen(
             likes = 8
         )
     )
-
-    fun decodeBase64ToBitmap(base64String: String): Bitmap? {
-        return try {
-            val decodedBytes = Base64.decode(base64String, Base64.DEFAULT)
-            BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-    }
 
     LazyColumn(
         modifier = Modifier
@@ -448,7 +439,7 @@ fun ActivityScreen(
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
-                        IconButton(onClick = { }) {
+                        IconButton(onClick = { showReviewDialog = true }) {
                             Icon(Icons.Default.Add, "Voeg review toe", tint = Color.White)
                         }
                     }
@@ -460,108 +451,137 @@ fun ActivityScreen(
                 }
             }
         }
-
-        // Write Review Section
-        item {
-            Surface(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = Color(0xFF1E2A3A)
+    }
+    // Write Review Section
+    if (showReviewDialog) {
+        Dialog(
+            onDismissRequest = { showReviewDialog = false }
+        ) {
+            // container to control size and background
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        "Jouw review",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-
-                    Text(
-                        "Geef een rating",
-                        color = Color(0xFFB0BEC5),
-                        modifier = Modifier.padding(top = 12.dp, bottom = 8.dp),
-                        fontSize = 14.sp
-                    )
-
-                    Row {
-                        repeat(5) { index ->
-                            IconButton(onClick = { userRating = index + 1 }) {
-                                Icon(
-                                    if (index < userRating) Icons.Default.Star else Icons.Default.StarBorder,
-                                    contentDescription = null,
-                                    tint = if (index < userRating) Color(0xFFFFC107) else Color(0xFF6B7A8F),
-                                    modifier = Modifier.size(32.dp)
-                                )
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFF1E2A3A)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        // Title row with close button
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Jouw review",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            IconButton(onClick = { showReviewDialog = false }) {
+                                Icon(Icons.Default.Close, contentDescription = "Sluit", tint = Color.White)
                             }
                         }
-                    }
 
-                    Text(
-                        "Voeg een foto toe (optioneel)",
-                        color = Color(0xFFB0BEC5),
-                        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
-                        fontSize = 14.sp
-                    )
-
-                    Surface(
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(RoundedCornerShape(8.dp)),
-                        color = Color(0xFF2C3E50)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    Icons.Default.CameraAlt,
-                                    contentDescription = null,
-                                    tint = Color(0xFF6B7A8F),
-                                    modifier = Modifier.size(32.dp)
-                                )
-                                Text(
-                                    "Voeg foto toe",
-                                    color = Color(0xFF6B7A8F),
-                                    fontSize = 12.sp
-                                )
-                            }
-                        }
-                    }
-
-                    OutlinedTextField(
-                        value = reviewText,
-                        onValueChange = { reviewText = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp),
-                        placeholder = { Text("Deel jouw ervaring...", color = Color(0xFF6B7A8F)) },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color(0xFF3F5266),
-                            focusedBorderColor = Color(0xFFFF6B35),
-                            unfocusedContainerColor = Color(0xFF2C3E50),
-                            focusedContainerColor = Color(0xFF2C3E50),
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(8.dp),
-                        minLines = 3
-                    )
-
-                    Button(
-                        onClick = { },
-                        modifier = Modifier
-                            .align(Alignment.End)
-                            .padding(top = 12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFF6B35)
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Send,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                        Text(
+                            "Geef een rating",
+                            color = Color(0xFFB0BEC5),
+                            modifier = Modifier.padding(top = 12.dp, bottom = 8.dp),
+                            fontSize = 14.sp
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Verstuur")
+
+                        Row {
+                            repeat(5) { index ->
+                                IconButton(onClick = { userRating = index + 1 }) {
+                                    Icon(
+                                        if (index < userRating) Icons.Default.Star else Icons.Default.StarBorder,
+                                        contentDescription = null,
+                                        tint = if (index < userRating) Color(0xFFFFC107) else Color(0xFF6B7A8F),
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Text(
+                            "Voeg een foto toe (optioneel)",
+                            color = Color(0xFFB0BEC5),
+                            modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
+                            fontSize = 14.sp
+                        )
+
+                        Surface(
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(RoundedCornerShape(8.dp)),
+                            color = Color(0xFF2C3E50)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        Icons.Default.CameraAlt,
+                                        contentDescription = null,
+                                        tint = Color(0xFF6B7A8F),
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                    Text(
+                                        "Voeg foto toe",
+                                        color = Color(0xFF6B7A8F),
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        OutlinedTextField(
+                            value = reviewText,
+                            onValueChange = { reviewText = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 16.dp),
+                            placeholder = { Text("Deel jouw ervaring...", color = Color(0xFF6B7A8F)) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = Color(0xFF3F5266),
+                                focusedBorderColor = Color(0xFFFF6B35),
+                                unfocusedContainerColor = Color(0xFF2C3E50),
+                                focusedContainerColor = Color(0xFF2C3E50),
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            minLines = 3
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            // Optional Cancel
+                            TextButton(onClick = { showReviewDialog = false }) {
+                                Text("Annuleren", color = Color(0xFFB0BEC5))
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Button(
+                                onClick = {
+                                    showReviewDialog = false
+                                    userRating = 0
+                                    reviewText = ""
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B35)),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Verstuur")
+                            }
+                        }
                     }
                 }
             }
