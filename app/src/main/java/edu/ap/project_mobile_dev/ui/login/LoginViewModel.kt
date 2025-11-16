@@ -51,7 +51,6 @@ class LoginViewModel: ViewModel() {
                 } else {
                     _uiState.value.copy(isloading = false, errorMessage = task.exception?.message ?: "Login failed")
                 }
-
             }
     }
     fun registerWithEmailPassword() {
@@ -176,10 +175,5 @@ class LoginViewModel: ViewModel() {
             .addOnFailureListener { e ->
                 callback(false, e.message)
             }
-    }
-
-
-    fun createUser(){
-
     }
 }

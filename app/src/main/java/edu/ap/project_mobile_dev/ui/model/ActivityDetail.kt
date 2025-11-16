@@ -8,7 +8,7 @@ data class ActivityDetail (
     val category: Category,
     val title: String,
     val ratingM: Int,
-    val ratings: List<Rating> = emptyList(),
+    val ratings: List<Review> = emptyList(),
     val location: String,
     val city: String,
     val description: String,

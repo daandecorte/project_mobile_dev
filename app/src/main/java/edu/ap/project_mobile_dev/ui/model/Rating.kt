@@ -1,10 +1,8 @@
 package edu.ap.project_mobile_dev.ui.model
 
-data class Rating(
-    val userId: Int,
+data class Review(
+    val activityId: String,
     val rating: Int,
-    val images: List<String> = emptyList(),
     val description: String,
     val likes: Int,
-
 )
