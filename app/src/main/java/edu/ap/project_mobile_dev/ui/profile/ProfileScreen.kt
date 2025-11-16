@@ -39,11 +39,17 @@ data class UserReview(
 fun ProfileScreen(
     navController: NavController,
     onBack: () -> Unit,
-    viewModel: LoginViewModel = viewModel()
+    viewModel: ProfileViewModel = viewModel(),
+    viewModelLogin: LoginViewModel = viewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.getUser()
+    }
+
     var selectedTab by remember { mutableStateOf(0) }
-    var username by remember { mutableStateOf("Jan Smeets") }
     var isEditingUsername by remember { mutableStateOf(false) }
 
     val favoriteActivities = remember {
@@ -145,8 +151,8 @@ fun ProfileScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 OutlinedTextField(
-                                    value = username,
-                                    onValueChange = { username = it },
+                                    value = uiState.username,
+                                    onValueChange = { viewModel.changeUsername(it) },
                                     modifier = Modifier
                                         .weight(1f)
                                         .padding(horizontal = 8.dp),
@@ -161,7 +167,10 @@ fun ProfileScreen(
                                     shape = RoundedCornerShape(8.dp),
                                     singleLine = true
                                 )
-                                IconButton(onClick = { isEditingUsername = false }) {
+                                IconButton(onClick = {
+                                    isEditingUsername = false
+                                    viewModel.changeDBUsername()
+                                }) {
                                     Icon(
                                         Icons.Default.Check,
                                         contentDescription = "Opslaan",
@@ -175,7 +184,7 @@ fun ProfileScreen(
                                 horizontalArrangement = Arrangement.Center
                             ) {
                                 Text(
-                                    username,
+                                    uiState.username,
                                     fontSize = 24.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
@@ -338,7 +347,7 @@ fun ProfileScreen(
             ) {
                 Button(
                     onClick = {
-                        viewModel.logout(context as? MainActivity)
+                        viewModelLogin.logout(context as? MainActivity)
                         navController.navigate("login") {
                             popUpTo(0) { inclusive = true }
                         }
