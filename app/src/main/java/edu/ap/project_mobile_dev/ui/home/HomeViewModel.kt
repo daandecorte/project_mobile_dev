@@ -1,8 +1,14 @@
 package edu.ap.project_mobile_dev.ui.home
 
+import android.content.pm.PackageManager
+import android.location.Geocoder
 import android.util.Log
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.location.LocationServices
+import com.google.api.Context
 import com.google.firebase.firestore.FirebaseFirestore
 import edu.ap.project_mobile_dev.ui.add.Category
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,7 +17,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import edu.ap.project_mobile_dev.ui.model.ActivityPost
 import edu.ap.project_mobile_dev.ui.model.Activity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import org.osmdroid.util.GeoPoint
+import java.util.Locale
 
 class HomeViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -20,7 +31,42 @@ class HomeViewModel : ViewModel() {
     init {
         loadActivities()
     }
+    fun getCurrentLocation(context: android.content.Context) {
+        viewModelScope.launch {
+            try {
+                if (ContextCompat.checkSelfPermission(
+                        context,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    // Permission not granted, exit or show message
+                    println("Location permission not granted!")
+                    return@launch
+                }
+                val fused = LocationServices.getFusedLocationProviderClient(context)
+                val location = fused.lastLocation.await()
+                    ?: return@launch // location unavailable
 
+                val latitude = location.latitude
+                val longitude = location.longitude
+
+                // --- Reverse Geocode ---
+                val geocoder = Geocoder(context, Locale.getDefault())
+                val results = withContext(Dispatchers.IO) {
+                    geocoder.getFromLocation(latitude, longitude, 1)
+                }
+
+                _uiState.update {
+                    it.copy(
+                        currentLocation = GeoPoint(latitude, longitude)
+                    )
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
     fun refreshActivities() {
         _uiState.update {
             state -> state.copy(isRefreshing = true)
@@ -42,7 +88,9 @@ class HomeViewModel : ViewModel() {
                             description = doc.getString("description") ?: "",
                             category = Category.valueOf(doc.getString("category") ?: "OTHER"),
                             location = doc.getString("location") ?: "",
-                            city = doc.getString("city") ?: ""
+                            city = doc.getString("city") ?: "",
+                            lat=doc.getString("lat") ?: "",
+                            lon=doc.getString("lon") ?: "",
                         )
                     } catch (e: Exception) {
                         null

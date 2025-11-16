@@ -8,5 +8,7 @@ data class ActivityPost(
     val description: String,
     val category: Category,
     val location: String,
-    val city: String
+    val city: String,
+    val lat: String,
+    val lon: String
 )

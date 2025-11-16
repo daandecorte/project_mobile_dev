@@ -12,5 +12,8 @@ data class AddUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val photoBase64: String = "",
-    val isPhotoLoading: Boolean = false
+    val isPhotoLoading: Boolean = false,
+    val lat:String="",
+    val lon:String="",
+    val location:String=""
 )

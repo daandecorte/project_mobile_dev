@@ -94,6 +94,7 @@ fun HomeScreen(
             FloatingActionButton(
                 onClick = { navController.navigate("add") },
                 containerColor = Color.Transparent,
+                modifier = Modifier.padding(8.dp),
                 contentColor = Color.White,
                 shape = RoundedCornerShape(16.dp)
             ) {
@@ -102,8 +103,8 @@ fun HomeScreen(
                         .size(56.dp)
                         .background(
                             brush = Brush.horizontalGradient(
-                                    colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
-                                ),
+                                colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
+                            ),
                             shape = RoundedCornerShape(8.dp)
                         ),
                     contentAlignment = Alignment.Center
@@ -160,10 +161,9 @@ fun HomeScreen(
                 }
             }
             var isExpanded by remember { mutableStateOf(false) }
-            if (uiState.selectedTab == 0) {
                 Column(
                     modifier = Modifier
-                        .padding(horizontal= 16.dp) //outer padding
+                        .padding(horizontal = 16.dp) //outer padding
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color(0xFF1E2A3A))
                         .padding(12.dp) //inner padding
@@ -263,37 +263,38 @@ fun HomeScreen(
                 if (uiState.selectedTab == 0) {
                     val isRefreshing = uiState.isRefreshing // Boolean from ViewModel
                     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
-                SwipeRefresh(
-                    state = swipeRefreshState,
-                    onRefresh = { viewModel.refreshActivities() } // Define this in ViewModel
-                ) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0xFF0F172A)),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    SwipeRefresh(
+                        state = swipeRefreshState,
+                        onRefresh = { viewModel.refreshActivities() } // Define this in ViewModel
                     ) {
-                        items(uiState.filteredActivities) { activity ->
-                            ActivityCard(
-                                activity = activity,
-                                onClick = { onActivityClick(activity) }
-                            )
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color(0xFF0F172A)),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(uiState.filteredActivities) { activity ->
+                                ActivityCard(
+                                    activity = activity,
+                                    onClick = { onActivityClick(activity) }
+                                )
+                            }
                         }
                     }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .background(Color(0xFF0F172A))
+                            .padding(16.dp)
+                            .clip(RoundedCornerShape(16.dp)),
+                    ) {
+                        OsmdroidMapView(viewModel=viewModel, onActivityClick={activity->onActivityClick(activity)})
+                    }
                 }
-            }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .background(Color(0xFF1E2A3A))
-                        .clip(RoundedCornerShape(0.dp)),
-                ) {
-                    OsmdroidMapView()
-                }
-            }
+
         }
     }
 }
@@ -322,7 +323,7 @@ fun TabButton(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    brush = if(uiState.selectedTab == tab) {
+                    brush = if (uiState.selectedTab == tab) {
                         Brush.horizontalGradient(
                             colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
                         )
@@ -377,7 +378,9 @@ fun CategoryChip(category: Category, selected: Boolean, onClick: () -> Unit) {
                 )
                 Text(
                     category.displayName,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).offset((-6).dp),
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .offset((-6).dp),
                     color = Color.White,
                     fontSize = 14.sp
                 )
@@ -450,7 +453,9 @@ fun ActivityCard(activity: Activity, onClick: () -> Unit) {
                         )
                         Text(
                             activity.category.displayName,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp).offset(-4.dp),
+                            modifier = Modifier
+                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                                .offset(-4.dp),
                             color = Color.White,
                             fontSize = 12.sp
                         )

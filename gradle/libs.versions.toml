@@ -21,6 +21,7 @@ playServicesAuth = "21.4.0"
 ui = "1.9.4"
 firebaseCommonKtx = "22.0.1"
 firebaseAuthKtx = "24.0.1"
+playServicesLocation = "21.3.0"
 
 [libraries]
 androidx-activity-compose-v193 = { module = "androidx.activity:activity-compose", version.ref = "activityComposeVersion" }
@@ -58,6 +59,7 @@ firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-fires
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 firebase-common-ktx = { group = "com.google.firebase", name = "firebase-common-ktx", version.ref = "firebaseCommonKtx" }
 google-firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -1,10 +1,13 @@
 package edu.ap.project_mobile_dev.ui.add
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.location.Geocoder
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Base64
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
@@ -18,7 +21,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.io.ByteArrayOutputStream
 import androidx.core.graphics.scale
+import com.google.android.gms.location.LocationServices
 import edu.ap.project_mobile_dev.ui.model.ActivityPost
+import kotlinx.coroutines.withContext
+import java.util.Locale
 
 class AddViewModel : ViewModel() {
 
@@ -88,11 +94,58 @@ class AddViewModel : ViewModel() {
         val byteArray = outputStream.toByteArray()
         return Base64.encodeToString(byteArray, Base64.DEFAULT)
     }
-    fun useCurrentLocation() {
+    fun useCurrentLocation(context: Context) {
         viewModelScope.launch {
+            try {
 
-            _uiState.update { it.copy(city = "Antwerpen", isUsingCurrentLocation = true) }
-            validateForm()
+                if (ContextCompat.checkSelfPermission(
+                        context,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    // Permission not granted, exit or show message
+                    println("Location permission not granted!")
+                    return@launch
+                }
+                val fused = LocationServices.getFusedLocationProviderClient(context)
+                val location = fused.lastLocation.await()
+                    ?: return@launch // location unavailable
+
+                val latitude = location.latitude
+                val longitude = location.longitude
+
+                // --- Reverse Geocode ---
+                val geocoder = Geocoder(context, Locale.getDefault())
+                val results = withContext(Dispatchers.IO) {
+                    geocoder.getFromLocation(latitude, longitude, 1)
+                }
+
+                var city = ""
+                var street = ""
+                var label = ""
+
+                results?.firstOrNull()?.let { addr ->
+                    city = addr.locality ?: addr.subAdminArea ?: ""
+                    street = addr.thoroughfare ?: ""
+                    label = addr.getAddressLine(0) ?: ""
+                }
+                println("Reverse geocode results: $results")
+                // --- Update UI state ---
+                _uiState.update {
+                    it.copy(
+                        lat = latitude.toString(),
+                        lon = longitude.toString(),
+                        city = city,
+                        location = street,
+                        isUsingCurrentLocation = true
+                    )
+                }
+
+                validateForm()
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
@@ -106,8 +159,10 @@ class AddViewModel : ViewModel() {
                         description = _uiState.value.description,
                         imageUrl = _uiState.value.photoBase64 ?: "",
                         category = _uiState.value.selectedCategory ?: Category.OTHER,
-                        location = _uiState.value.city,
+                        location = _uiState.value.location,
                         city = _uiState.value.city,
+                        lat = _uiState.value.lat,
+                        lon = _uiState.value.lon,
                     )
                     db.collection("activities")
                         .add(newActivity)

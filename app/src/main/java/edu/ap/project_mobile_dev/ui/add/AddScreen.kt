@@ -31,6 +31,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import edu.ap.project_mobile_dev.ui.home.HomeViewModel
 import edu.ap.project_mobile_dev.ui.model.ActivityPost
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -109,7 +113,7 @@ fun AddScreen(
 
             // Gebruik huidige locatie
             UseCurrentLocationButton(
-                onClick = { viewModel.useCurrentLocation() }
+                viewModel=viewModel
             )
 
             // Categorie sectie
@@ -309,14 +313,26 @@ private fun CityField(
         )
     }
 }
+@OptIn(ExperimentalPermissionsApi::class)
 
 @Composable
 private fun UseCurrentLocationButton(
-    onClick: () -> Unit
+    viewModel: AddViewModel
 ) {
+    val context = LocalContext.current
+    val permissionState = rememberPermissionState(android.Manifest.permission.ACCESS_FINE_LOCATION)
+
     TextButton(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        onClick = {
+            if (permissionState.status.isGranted) {
+                // Permission granted, call ViewModel
+                viewModel.useCurrentLocation(context)
+            } else {
+                // Request permission
+                permissionState.launchPermissionRequest()
+            }
+        }
     ) {
         Icon(
             imageVector = Icons.Default.LocationOn,

@@ -61,6 +61,8 @@ fun ProfileScreen(
                 category = Category.CULTURE,
                 location = "Mechelsesteenweg 291",
                 city = "Antwerpen",
+                lat = "",
+                lon=""
             ),
             Activity(
                 documentId = "2",
@@ -69,6 +71,8 @@ fun ProfileScreen(
                 category = Category.MONUMENT,
                 location = "Hanzestedenplaats 1",
                 city = "Antwerpen",
+                lat = "",
+                lon=""
             )
         )
     }
