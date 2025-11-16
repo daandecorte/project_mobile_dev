@@ -68,7 +68,7 @@ dependencies {
     implementation(libs.play.services.auth)
     implementation(libs.androidx.lifecycle.viewmodel.compose.v280)
     implementation(libs.androidx.navigation.compose)
-
+    implementation("org.osmdroid:osmdroid-android:6.1.20")
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("com.google.accompanist:accompanist-swiperefresh:0.30.1")
 

@@ -39,6 +39,7 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import edu.ap.project_mobile_dev.ui.add.Category
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import edu.ap.project_mobile_dev.ui.map.OsmdroidMapView
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -285,11 +286,12 @@ fun HomeScreen(
             } else {
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(0xFF1E2A3A)),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .background(Color(0xFF1E2A3A))
+                        .clip(RoundedCornerShape(0.dp)),
                 ) {
-                    Text("Kaart weergave", color = Color.White)
+                    OsmdroidMapView()
                 }
             }
         }

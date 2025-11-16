@@ -1,6 +1,9 @@
 package edu.ap.project_mobile_dev
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,6 +21,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.firebase.FirebaseApp
@@ -33,10 +38,14 @@ import edu.ap.project_mobile_dev.ui.activity.ActivityScreen
 import edu.ap.project_mobile_dev.ui.home.HomeScreen
 import edu.ap.project_mobile_dev.ui.home.HomeViewModel
 import edu.ap.project_mobile_dev.ui.profile.ProfileScreen
+import org.osmdroid.config.Configuration
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.INTERNET), 0)
+        }
         FirebaseApp.initializeApp(this)
         FirebaseFirestore.setLoggingEnabled(true)
         enableEdgeToEdge()
@@ -102,6 +111,9 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        val ctx = applicationContext
+        Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx))
+        Configuration.getInstance().userAgentValue = "MapApp"
     }
     @Composable
     fun CityTripTheme(content: @Composable () -> Unit) {
