@@ -10,8 +10,11 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.auth
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.FirebaseFirestore
 import edu.ap.project_mobile_dev.MainActivity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +25,8 @@ class LoginViewModel: ViewModel() {
     val auth = FirebaseAuth.getInstance()
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState
+
+    private val db = FirebaseFirestore.getInstance();
 
     fun onEmailChanged(email: String) {
         _uiState.value = _uiState.value.copy(email = email)
@@ -62,24 +67,46 @@ class LoginViewModel: ViewModel() {
 
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
-                _uiState.value = if (task.isSuccessful) {
-                    _uiState.value.copy(isloading = false, success = true)
+                if (task.isSuccessful) {
+                    val firebaseUser = auth.currentUser
+                    val uid = firebaseUser?.uid ?: return@addOnCompleteListener
+
+                    val user = mapOf(
+                        "username" to "",
+                        "favorites" to emptyList<String>(),
+                        "reviews" to emptyList<String>(),
+                    )
+
+                    db.collection("users")
+                        .document(uid)
+                        .set(user)
+                        .addOnSuccessListener {
+                            _uiState.value = _uiState.value.copy(isloading = false, success = true)
+                        }
+                        .addOnFailureListener { e ->
+                            _uiState.value = _uiState.value.copy(
+                                isloading = false,
+                                errorMessage = "Firestore error: ${e.message}"
+                            )
+                        }
+
                 } else {
-                    _uiState.value.copy(isloading = false, errorMessage = task.exception?.message ?: "Registratie mislukt")
+                    _uiState.value = _uiState.value.copy(
+                        isloading = false,
+                        errorMessage = task.exception?.message ?: "Registratie mislukt"
+                    )
                 }
             }
     }
+
     fun logout(activity: MainActivity? = null) {
-        // Sign out from Firebase
         auth.signOut()
 
-        // If signed in with Google, sign out there too
         activity?.let {
             val googleSignInClient = getGoogleSignInClient(it)
             googleSignInClient.signOut()
         }
 
-        // Reset UI state
         _uiState.value = LoginUiState()
     }
     fun getGoogleSignInClient(activity: MainActivity): GoogleSignInClient {
@@ -89,25 +116,70 @@ class LoginViewModel: ViewModel() {
             .build()
         return GoogleSignIn.getClient(activity, gso)
     }
+
     fun handleGoogleSignInResult(data: Intent?, onResult: (Boolean, String?) -> Unit) {
         viewModelScope.launch {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try {
-                val account= task.result
+                val account = task.result
                 val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+
                 auth.signInWithCredential(credential)
                     .addOnCompleteListener { signInTask ->
-                        if(signInTask.isSuccessful) {
-                            onResult(true, null)
+                        if (!signInTask.isSuccessful) {
+                            onResult(false, signInTask.exception?.message ?: "Google sign-in failed")
+                            return@addOnCompleteListener
                         }
-                        else {
-                            onResult(false, signInTask.exception?.message ?: "Login failed")
+
+                        val firebaseUser = auth.currentUser
+                        if (firebaseUser == null) {
+                            onResult(false, "Firebase user is null after sign-in")
+                            return@addOnCompleteListener
+                        }
+
+                        createUserInFirestore(firebaseUser) { ok, err ->
+                            if (ok) onResult(true, null)
+                            else onResult(false, err ?: "Failed creating user document")
                         }
                     }
-            }
-            catch (e: Exception) {
+            } catch (e: Exception) {
                 onResult(false, e.message)
             }
         }
+    }
+
+    private fun createUserInFirestore(user: FirebaseUser, callback: (Boolean, String?) -> Unit) {
+        val uid = user.uid
+
+        val userRef = db.collection("users").document(uid)
+
+        userRef.get()
+            .addOnSuccessListener { doc ->
+                if (doc.exists()) {
+                    callback(true, null)
+                } else {
+                    val user = hashMapOf(
+                        "username" to "",
+                        "favorites" to emptyList<String>(),
+                        "reviews" to emptyList<String>()
+                    )
+
+                    userRef.set(user, SetOptions.merge())
+                        .addOnSuccessListener {
+                            callback(true, null)
+                        }
+                        .addOnFailureListener { e ->
+                            callback(false, e.message)
+                        }
+                }
+            }
+            .addOnFailureListener { e ->
+                callback(false, e.message)
+            }
+    }
+
+
+    fun createUser(){
+
     }
 }
