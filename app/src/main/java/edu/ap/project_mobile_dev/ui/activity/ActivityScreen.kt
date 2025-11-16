@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.Brush
 
 
 data class Review(
@@ -199,16 +200,26 @@ fun ActivityScreen(
                         .padding(16.dp)
                 ) {
                     Surface(
-                        color = Color(0xFFFF6B35),
+                        color = Color.Transparent,
                         shape = RoundedCornerShape(14.dp)
                     ) {
-                        Text(
-                            activity.category.displayName,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            color = Color.White,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    brush = Brush.horizontalGradient(
+                                        colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
+                                    ),
+                                    shape = RoundedCornerShape(14.dp)
+                                )
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                activity.category.displayName,
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
 
                     Text(
@@ -245,11 +256,30 @@ fun ActivityScreen(
                         .weight(1f)
                         .height(48.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (uiState.selectedTab == 0) Color(0xFFFF6B35) else Color(0xFF2C3E50)
+                        containerColor = Color.Transparent
                     ),
+                    contentPadding = PaddingValues(0.dp),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Informatie")
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush = if (uiState.selectedTab == 0) {
+                                    Brush.horizontalGradient(
+                                        colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
+                                    )
+                                } else {
+                                    Brush.horizontalGradient(
+                                        colors = listOf(Color(0xFF2C3E50), Color(0xFF2C3E50))
+                                    )
+                                },
+                                shape = RoundedCornerShape(8.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Informatie", color = Color.White)
+                    }
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
@@ -258,17 +288,38 @@ fun ActivityScreen(
                         .weight(1f)
                         .height(48.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (uiState.selectedTab == 1) Color(0xFFFF6B35) else Color(0xFF2C3E50)
+                        containerColor = Color.Transparent
                     ),
+                    contentPadding = PaddingValues(0.dp),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Icon(
-                        Icons.Default.PhotoLibrary,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Foto's (8)")
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush = if (uiState.selectedTab == 1) {
+                                    Brush.horizontalGradient(
+                                        colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
+                                    )
+                                } else {
+                                    Brush.horizontalGradient(
+                                        colors = listOf(Color(0xFF2C3E50), Color(0xFF2C3E50))
+                                    )
+                                },
+                                shape = RoundedCornerShape(8.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ){
+                        Row() {
+                            Icon(
+                                Icons.Default.PhotoLibrary,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Foto's (8)")
+                        }
+                    }
                 }
             }
         }
@@ -322,17 +373,33 @@ fun ActivityScreen(
                     Button(
                         onClick = { },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFF6B35)
+                            containerColor = Color.Transparent
                         ),
+                        contentPadding = PaddingValues(0.dp),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Icon(
-                            Icons.Default.Directions,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Route")
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    brush = Brush.horizontalGradient(
+                                        colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
+                                    ),
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.Directions,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                    tint = Color.White
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Route", color = Color.White)
+                            }
+                        }
                     }
                 }
             }

@@ -31,6 +31,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.ap.project_mobile_dev.ui.model.Activity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.navigation.NavController
 import com.google.accompanist.swiperefresh.SwipeRefresh
@@ -91,11 +92,23 @@ fun HomeScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate("add") },
-                containerColor = Color(0xFFFF6B35),
+                containerColor = Color.Transparent,
                 contentColor = Color.White,
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Voeg activiteit toe")
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                    colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
+                                ),
+                            shape = RoundedCornerShape(8.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ){
+                    Icon(Icons.Default.Add, contentDescription = "Voeg activiteit toe")
+                }
             }
         },
         floatingActionButtonPosition = FabPosition.End,
@@ -113,19 +126,23 @@ fun HomeScreen(
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 TabButton(
+                    tab = 0,
                     text = "Lijst",
                     icon = Icons.Default.FilterList,
                     selected = uiState.selectedTab == 0,
                     onClick = { viewModel.setSelectedTab(0) },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    uiState = uiState
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 TabButton(
+                    tab = 1,
                     text = "Kaart",
                     icon = Icons.Default.Map,
                     selected = uiState.selectedTab == 1,
                     onClick = { viewModel.setSelectedTab(1) },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    uiState = uiState
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 IconButton(
@@ -281,24 +298,47 @@ fun HomeScreen(
 
 @Composable
 fun TabButton(
+    tab: Int,
     text: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     selected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    uiState: HomeUiState
 ) {
     Button(
         onClick = onClick,
         modifier = modifier.height(48.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (selected) Color(0xFFFF6B35) else Color(0xFF2C3E50),
+            containerColor = Color.Transparent,
             contentColor = Color.White
         ),
+        contentPadding = PaddingValues(0.dp),
         shape = RoundedCornerShape(8.dp)
     ) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = if(uiState.selectedTab == tab) {
+                        Brush.horizontalGradient(
+                            colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
+                        )
+                    } else {
+                        Brush.horizontalGradient(
+                            colors = listOf(Color(0xFF2C3E50), Color(0xFF2C3E50))
+                        )
+                    },
+                    shape = RoundedCornerShape(8.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text)
+            }
+        }
     }
 }
 
@@ -307,23 +347,39 @@ fun CategoryChip(category: Category, selected: Boolean, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(20.dp),
-        color = if (selected) Color(0xFFFF6B35) else Color(0xFF334155)
+        color = Color.Transparent
     ) {
-        Row(
-            modifier = Modifier.padding(start = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = category.icon,
-                contentDescription = "icon",
-                modifier = Modifier.size(20.dp)
-            )
-            Text(
-                category.displayName,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).offset((-6).dp),
-                color = Color.White,
-                fontSize = 14.sp
-            )
+        Box(
+            modifier = Modifier
+                .background(
+                    brush = if (selected) {
+                        Brush.horizontalGradient(
+                            colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
+                        )
+                    } else {
+                        Brush.horizontalGradient(
+                            colors = listOf(Color(0xFF334155), Color(0xFF334155))
+                        )
+                    },
+                    shape = RoundedCornerShape(20.dp)
+                )
+        ){
+            Row(
+                modifier = Modifier.padding(start = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = category.icon,
+                    contentDescription = "icon",
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    category.displayName,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).offset((-6).dp),
+                    color = Color.White,
+                    fontSize = 14.sp
+                )
+            }
         }
     }
 }
@@ -372,21 +428,31 @@ fun ActivityCard(activity: Activity, onClick: () -> Unit) {
                 shape = RoundedCornerShape(16.dp),
                 color = Color(0xFFFF6B35)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(start = 10.dp)
+                Box(
+                    modifier = Modifier
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
+                            ),
+                            shape = RoundedCornerShape(14.dp)
+                        )
                 ) {
-                    Icon(
-                        imageVector = activity.category.icon,
-                        contentDescription = "Icon",
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Text(
-                        activity.category.displayName,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp).offset(-4.dp),
-                        color = Color.White,
-                        fontSize = 12.sp
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(start = 10.dp)
+                    ) {
+                        Icon(
+                            imageVector = activity.category.icon,
+                            contentDescription = "Icon",
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            activity.category.displayName,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp).offset(-4.dp),
+                            color = Color.White,
+                            fontSize = 12.sp
+                        )
+                    }
                 }
             }
         }

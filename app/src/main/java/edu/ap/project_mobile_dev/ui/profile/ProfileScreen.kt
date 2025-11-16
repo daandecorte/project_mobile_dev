@@ -219,17 +219,37 @@ fun ProfileScreen(
                         .weight(1f)
                         .height(48.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selectedTab == 0) Color(0xFFFF6B35) else Color(0xFF2C3E50)
+                        containerColor = Color.Transparent
                     ),
+                    contentPadding = PaddingValues(0.dp),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Icon(
-                        Icons.Default.Favorite,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Favorieten")
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush = if(selectedTab == 0){
+                                    Brush.horizontalGradient(
+                                        colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
+                                    )
+                                } else {
+                                    Brush.horizontalGradient(
+                                        colors = listOf(Color(0xFF2C3E50), Color(0xFF2C3E50))
+                                    )
+                                }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ){
+                        Row(verticalAlignment = Alignment.CenterVertically){
+                            Icon(
+                                Icons.Default.Favorite,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Favorieten")
+                        }
+                    }
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
@@ -238,17 +258,37 @@ fun ProfileScreen(
                         .weight(1f)
                         .height(48.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selectedTab == 1) Color(0xFFFF6B35) else Color(0xFF2C3E50)
+                        containerColor = Color.Transparent
                     ),
+                    contentPadding = PaddingValues(0.dp),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Icon(
-                        Icons.Default.Star,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Reviews")
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush = if(selectedTab == 1){
+                                    Brush.horizontalGradient(
+                                        colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
+                                    )
+                                } else {
+                                    Brush.horizontalGradient(
+                                        colors = listOf(Color(0xFF2C3E50), Color(0xFF2C3E50))
+                                    )
+                                }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ){
+                        Row(verticalAlignment = Alignment.CenterVertically){
+                            Icon(
+                                Icons.Default.Star,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Reviews")
+                        }
+                    }
                 }
             }
         }
@@ -400,15 +440,26 @@ fun FavoriteActivityCard(activity: Activity, onRemove: () -> Unit) {
                 }
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFFFF6B35),
+                    color = Color.Transparent,
                     modifier = Modifier.padding(top = 8.dp)
                 ) {
-                    Text(
-                        "${activity.category}",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        color = Color.White,
-                        fontSize = 12.sp
-                    )
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
+                                ),
+                                shape = RoundedCornerShape(14.dp)
+                            )
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            "${activity.category}",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            color = Color.White,
+                            fontSize = 12.sp
+                        )
+                    }
                 }
             }
             IconButton(onClick = onRemove) {

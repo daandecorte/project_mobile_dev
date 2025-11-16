@@ -18,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -136,31 +137,53 @@ fun AddScreen(
             Button(
                 onClick = {
                     viewModel.saveLocation(onSuccess = {
-                        newActivity -> onLocationAdded(newActivity)
+                            newActivity -> onLocationAdded(newActivity)
                     })
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFF6B35)
+                    containerColor = Color.Transparent
                 ),
+                contentPadding = PaddingValues(0.dp),
                 shape = RoundedCornerShape(12.dp),
                 enabled = uiState.isFormValid
             ) {
-                if(uiState.isLoading) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 3.dp
-                    )
-                }
-                else {
-                    Text(
-                        text = "Locatie Opslaan",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .then(
+                            if (!uiState.isFormValid) {
+                                Modifier.background(
+                                    color = Color(0xFF334155).copy(alpha = 0.5f),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                            } else Modifier
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if(uiState.isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 3.dp
+                        )
+                    }
+                    else {
+                        Text(
+                            text = "Locatie Opslaan",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
                 }
             }
         }
