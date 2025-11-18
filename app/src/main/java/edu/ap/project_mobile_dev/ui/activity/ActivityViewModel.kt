@@ -1,18 +1,30 @@
 package edu.ap.project_mobile_dev.ui.activity
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
+import android.provider.MediaStore
 import android.util.Base64
 import android.util.Log
+import androidx.core.graphics.scale
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
 import edu.ap.project_mobile_dev.ui.add.Category
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import edu.ap.project_mobile_dev.ui.model.Activity
 import edu.ap.project_mobile_dev.ui.model.ActivityDetail
+import edu.ap.project_mobile_dev.ui.model.ReviewPost
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
+import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
+
 
 class ActivityViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(ActivityUIState())
@@ -25,7 +37,7 @@ class ActivityViewModel : ViewModel() {
             return
         }
 
-        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        _uiState.update { it.copy(isLoading = true, errorMessage = null, activityId = documentId) }
 
         db.collection("activities")
             .document(documentId)
@@ -67,5 +79,101 @@ class ActivityViewModel : ViewModel() {
             e.printStackTrace()
             null
         }
+    }
+
+    fun onPhotoSelected(uri: Uri, context: Context) {
+        val MAX_FIRESTORE_IMAGE_SIZE = 1048487
+
+        viewModelScope.launch(Dispatchers.IO) {
+            _uiState.update { it.copy(isPhotoLoading = true, errorMessage = null) }
+            val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+            var quality = 80
+            var base64: String
+            do {
+                base64 = bitmapToBase64(bitmap, quality = quality)
+                quality -= 10
+            } while (base64.length > MAX_FIRESTORE_IMAGE_SIZE && quality > 5)
+
+            if (base64.length > MAX_FIRESTORE_IMAGE_SIZE) {
+                _uiState.update { current ->
+                    current.copy(errorMessage = "Afbeelding is te groot ${base64.length}")
+                }
+                return@launch
+            }
+            _uiState.update { current ->
+                current.copy(
+                    photoUri = uri.toString(),
+                    photoBase64 = base64,
+                    isPhotoLoading = false
+                )
+            }
+        }
+    }
+
+    fun bitmapToBase64(bitmap: Bitmap, quality: Int =80): String {
+        val maxWidth=720;
+        val maxHeight=720;
+
+        val ratio = minOf(maxWidth.toFloat() / bitmap.width, maxHeight.toFloat() / bitmap.height, 1f)
+        val newWidth = (bitmap.width * ratio).toInt()
+        val newHeight = (bitmap.height * ratio).toInt()
+
+        val resizedBitmap = bitmap.scale(newWidth, newHeight)
+
+        val outputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream) // compress to reduce size
+        val byteArray = outputStream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.DEFAULT)
+    }
+
+    fun showReviewDialog(show: Boolean){
+        _uiState.update { it.copy(showReviewDialog = show) }
+    }
+
+    fun uploadReview(){
+        if(_uiState.value.userRating in 1..5){
+            val review = ReviewPost (
+                activityId = _uiState.value.activityId,
+                rating = _uiState.value.userRating,
+                date = Timestamp.now(),
+                description = _uiState.value.reviewText,
+                likes = emptyList()
+            )
+
+
+            db.collection("reviews")
+                .add(review)
+                .addOnSuccessListener { documentRef ->
+                    val currentUser = FirebaseAuth.getInstance().currentUser;
+
+                    db.collection("users")
+                        .document(currentUser?.uid ?: "")
+                        .update("reviews", FieldValue.arrayUnion(documentRef.id))
+                        .addOnSuccessListener {
+                            println("User updated with review")
+                            resetReview()
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("Firestore", "Failed to update user", e)
+                        }
+                }
+                .addOnFailureListener { e ->
+                    Log.e("Firestore", "Failed to upload review", e)
+                }
+
+
+        }
+    }
+
+    fun resetReview(){
+        _uiState.update { it.copy(showReviewDialog = false, userRating = 0, reviewText = "") }
+    }
+
+    fun updateReviewText(text: String){
+        _uiState.update { it.copy(reviewText = text) }
+    }
+
+    fun updateRating(rating: Int){
+        _uiState.update { it.copy(userRating = rating) }
     }
 }
