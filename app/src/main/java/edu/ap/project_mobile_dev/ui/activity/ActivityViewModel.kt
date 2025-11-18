@@ -187,6 +187,8 @@ class ActivityViewModel : ViewModel() {
     }
 
     suspend fun getReviews() {
+        _uiState.update { it.copy(reviews = emptyList()) }
+
         val collection = db.collection("reviews")
 
         try{
