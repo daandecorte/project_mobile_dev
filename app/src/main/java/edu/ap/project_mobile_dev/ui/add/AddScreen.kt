@@ -8,6 +8,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -20,11 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,8 +33,8 @@ import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import edu.ap.project_mobile_dev.ui.home.HomeViewModel
 import edu.ap.project_mobile_dev.ui.model.ActivityPost
+import org.osmdroid.util.GeoPoint
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -107,8 +106,9 @@ fun AddScreen(
 
             // Stad
             CityField(
-                value = uiState.city,
-                onValueChange = { viewModel.updateCity(it) }
+                value = uiState.location,
+                onValueChange = { viewModel.updateCity(it) },
+                viewModel = viewModel
             )
 
             // Gebruik huidige locatie
@@ -229,7 +229,9 @@ private fun PhotoSection(
                     painter = rememberAsyncImagePainter(photoUri),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp))
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(12.dp))
                 )
             }
 
@@ -288,7 +290,8 @@ private fun LocationNameField(
 @Composable
 private fun CityField(
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    viewModel:AddViewModel
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
@@ -298,7 +301,10 @@ private fun CityField(
         )
         OutlinedTextField(
             value = value,
-            onValueChange = onValueChange,
+            onValueChange = {
+                onValueChange(it)
+                viewModel.search(it)
+            },
             placeholder = { Text("Bijv. Antwerpen", color = Color(0xFF5A6470)) },
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
@@ -311,6 +317,41 @@ private fun CityField(
             ),
             shape = RoundedCornerShape(12.dp)
         )
+        val suggestions = viewModel.suggestions
+        if (viewModel.uiState.value.loading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+            }
+        }
+        else if (suggestions.isNotEmpty()) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 200.dp) // limits height
+                    .background(Color(0xFF1E2837))
+                    .border(1.dp, Color(0xFF3A4451), RoundedCornerShape(16.dp))
+            ) {
+                items(suggestions) { entry ->
+                    Text(
+                        text = entry.display_name ?: "Unknown location",
+                        color = Color.White,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onValueChange(entry.display_name ?: "")
+                                viewModel.suggestions = emptyList()
+                                viewModel.setCoords(entry)
+                            }
+                            .padding(8.dp)
+                    )
+                }
+            }
+        }
     }
 }
 @OptIn(ExperimentalPermissionsApi::class)

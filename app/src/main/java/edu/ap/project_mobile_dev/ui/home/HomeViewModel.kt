@@ -91,6 +91,7 @@ class HomeViewModel : ViewModel() {
                             city = doc.getString("city") ?: "",
                             lat=doc.getString("lat") ?: "",
                             lon=doc.getString("lon") ?: "",
+                            street = doc.getString("street")?:""
                         )
                     } catch (e: Exception) {
                         null

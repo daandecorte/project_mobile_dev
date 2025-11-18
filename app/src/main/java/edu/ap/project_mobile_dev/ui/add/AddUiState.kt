@@ -15,5 +15,8 @@ data class AddUiState(
     val isPhotoLoading: Boolean = false,
     val lat:String="",
     val lon:String="",
-    val location:String=""
+    val location:String="",
+    val street: String="",
+    var lastQuery: String="",
+    var loading: Boolean = false
 )
