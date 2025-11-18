@@ -56,13 +56,11 @@ class ProfileViewModel: ViewModel() {
 
         for (id in _uiState.value.reviewList) {
             try {
-                // Fetch review document
                 val doc = collection.document(id).get().await()
                 if (!doc.exists()) continue
 
                 val activityId = doc.getString("activityId") ?: ""
 
-                // Fetch activity document
                 val activityDoc = db.collection("activities").document(activityId).get().await()
                 val activityTitle = if (activityDoc.exists()) activityDoc.getString("title") ?: "" else ""
 

@@ -29,17 +29,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
 import coil.compose.rememberAsyncImagePainter
-import kotlinx.coroutines.flow.update
-
-data class Review(
-    val userName: String,
-    val initials: String,
-    val timeAgo: String,
-    val rating: Int,
-    val text: String,
-    val likes: Int,
-    val hasImage: Boolean = false
-)
+import edu.ap.project_mobile_dev.ui.model.Review
+import edu.ap.project_mobile_dev.ui.model.ReviewDetail
 
 @Composable
 fun ActivityScreen(
@@ -100,26 +91,6 @@ fun ActivityScreen(
         }
         return
     }
-
-    val reviews = listOf(
-        Review(
-            userName = "Tom Janssens",
-            initials = "TJ",
-            timeAgo = "2 weken geleden",
-            rating = 5,
-            text = "Geweldige ervaring! De rondleiding was super interessant en het bier was heerlijk. Aanrader voor iedereen die van bier houdt.",
-            likes = 12,
-            hasImage = true
-        ),
-        Review(
-            userName = "Sarah De Vries",
-            initials = "SD",
-            timeAgo = "1 maand geleden",
-            rating = 4,
-            text = "Mooie locatie en vriendelijk personeel. Een aanrader!",
-            likes = 8
-        )
-    )
 
     LazyColumn(
         modifier = Modifier
@@ -444,7 +415,7 @@ fun ActivityScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "Reviews (${reviews.size})",
+                            "Reviews (${uiState.reviews.size})",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -454,7 +425,7 @@ fun ActivityScreen(
                         }
                     }
 
-                    reviews.forEach { review ->
+                    uiState.reviews.forEach { review ->
                         Spacer(modifier = Modifier.height(16.dp))
                         ReviewItem(review)
                     }
@@ -588,7 +559,7 @@ fun ActivityScreen(
 }
 
 @Composable
-fun ReviewItem(review: Review) {
+fun ReviewItem(review: ReviewDetail) {
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -602,7 +573,7 @@ fun ReviewItem(review: Review) {
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Text(
-                            review.initials,
+                            "+",
                             color = Color.White,
                             fontWeight = FontWeight.Bold
                         )
@@ -611,12 +582,12 @@ fun ReviewItem(review: Review) {
 
                 Column(modifier = Modifier.padding(start = 12.dp)) {
                     Text(
-                        review.userName,
+                        review.username,
                         color = Color.White,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        review.timeAgo,
+                        review.date,
                         color = Color(0xFFB0BEC5),
                         fontSize = 12.sp
                     )
@@ -634,7 +605,7 @@ fun ReviewItem(review: Review) {
                 }
             }
         }
-
+        /*
         if (review.hasImage) {
             Surface(
                 modifier = Modifier
@@ -653,11 +624,11 @@ fun ReviewItem(review: Review) {
                     )
                 }
             }
-        }
+        }*/
 
-        if (review.text.isNotEmpty()) {
+        if (review.description.isNotEmpty()) {
             Text(
-                review.text,
+                review.description,
                 color = Color(0xFFB0BEC5),
                 modifier = Modifier.padding(top = 12.dp),
                 lineHeight = 20.sp

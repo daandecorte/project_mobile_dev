@@ -24,6 +24,10 @@ import java.io.ByteArrayOutputStream
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
+import edu.ap.project_mobile_dev.ui.model.ReviewDetail
+import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 
 class ActivityViewModel : ViewModel() {
@@ -56,6 +60,10 @@ class ActivityViewModel : ViewModel() {
                         bitmap = decodeBase64ToBitmap(doc.getString("imageUrl") ?: ""),
                     )
                     _uiState.update { it.copy(activity = activity, isLoading = false) }
+
+                    viewModelScope.launch {
+                        getReviews()
+                    }
                 } else {
                     _uiState.update { it.copy(errorMessage = "No such activity", isLoading = false) }
                     Log.w("Firestore", "No such document with id: $documentId")
@@ -132,7 +140,10 @@ class ActivityViewModel : ViewModel() {
 
     fun uploadReview(){
         if(_uiState.value.userRating in 1..5){
+            val currentUser = FirebaseAuth.getInstance().currentUser;
+
             val review = ReviewPost (
+                userId= currentUser?.uid ?: "Unknown",
                 activityId = _uiState.value.activityId,
                 rating = _uiState.value.userRating,
                 date = Timestamp.now(),
@@ -160,8 +171,6 @@ class ActivityViewModel : ViewModel() {
                 .addOnFailureListener { e ->
                     Log.e("Firestore", "Failed to upload review", e)
                 }
-
-
         }
     }
 
@@ -175,5 +184,42 @@ class ActivityViewModel : ViewModel() {
 
     fun updateRating(rating: Int){
         _uiState.update { it.copy(userRating = rating) }
+    }
+
+    suspend fun getReviews() {
+        val collection = db.collection("reviews")
+
+        try{
+            val reviews = collection.whereEqualTo("activityId", _uiState.value.activityId).get().await()
+
+            for(review in reviews){
+                val user = db.collection("users").document(review.getString("userId") ?: "").get().await()
+                val username = user.getString("username") ?: ""
+
+                val rating = (review.getLong("rating") ?: 0L).toInt()
+                val description = review.getString("description") ?: ""
+
+                val timestamp = review.getTimestamp("date") ?: com.google.firebase.Timestamp.now()
+                val date = timestamp.toDate()
+                val formattedDate = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(date)
+
+                val reviewDetail = ReviewDetail(
+                    username = username,
+                    rating = rating,
+                    description = description,
+                    date = formattedDate,
+                    likes = 2
+                )
+
+                _uiState.update { currentState ->
+                    val updatedReviews = currentState.reviews.toMutableList()
+                    updatedReviews.add(reviewDetail)
+                    currentState.copy(reviews = updatedReviews)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
     }
 }
