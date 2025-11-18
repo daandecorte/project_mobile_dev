@@ -1,8 +1,11 @@
 package edu.ap.project_mobile_dev.ui.model
 
-data class Review(
+import com.google.firebase.Timestamp
+
+data class ReviewPost(
     val activityId: String,
     val rating: Int,
+    val date: Timestamp,
     val description: String,
-    val likes: Int,
+    val likes: List<String>,
 )

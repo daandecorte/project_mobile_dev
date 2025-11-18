@@ -26,6 +26,7 @@ import edu.ap.project_mobile_dev.MainActivity
 import edu.ap.project_mobile_dev.ui.add.Category
 import edu.ap.project_mobile_dev.ui.login.LoginViewModel
 import edu.ap.project_mobile_dev.ui.model.Activity
+import edu.ap.project_mobile_dev.ui.model.Review
 
 data class UserReview(
     val activityName: String,
@@ -75,23 +76,6 @@ fun ProfileScreen(
                 lat = "",
                 lon="",
                 street=""
-            )
-        )
-    }
-
-    val userReviews = remember {
-        listOf(
-            UserReview(
-                activityName = "De Koninck Brouwerij",
-                rating = 5,
-                text = "Geweldige ervaring! Aanrader voor iedereen.",
-                date = "2 weken geleden"
-            ),
-            UserReview(
-                activityName = "MAS Museum",
-                rating = 4,
-                text = "Mooie collectie en moderne architectuur.",
-                date = "1 maand geleden"
             )
         )
     }
@@ -214,7 +198,7 @@ fun ProfileScreen(
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
                             StatItem(count = favoriteActivities.size, label = "Favorieten")
-                            StatItem(count = userReviews.size, label = "Reviews")
+                            StatItem(count = uiState.reviews.size, label = "Reviews")
                         }
                     }
                 }
@@ -328,11 +312,11 @@ fun ProfileScreen(
             }
         } else {
             // Reviews
-            items(userReviews) { review ->
+            items(uiState.reviews) { review ->
                 UserReviewCard(review = review)
             }
 
-            if (userReviews.isEmpty()) {
+            if (uiState.reviews.isEmpty()) {
                 item {
                     EmptyStateCard(
                         icon = Icons.Default.StarBorder,
@@ -489,7 +473,7 @@ fun FavoriteActivityCard(activity: Activity, onRemove: () -> Unit) {
 }
 
 @Composable
-fun UserReviewCard(review: UserReview) {
+fun UserReviewCard(review: Review) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -504,7 +488,7 @@ fun UserReviewCard(review: UserReview) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    review.activityName,
+                    review.activityId,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -522,7 +506,7 @@ fun UserReviewCard(review: UserReview) {
             }
 
             Text(
-                review.text,
+                review.description,
                 color = Color(0xFFB0BEC5),
                 modifier = Modifier.padding(top = 8.dp),
                 fontSize = 14.sp,
