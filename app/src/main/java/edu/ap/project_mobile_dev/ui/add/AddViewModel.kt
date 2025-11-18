@@ -7,6 +7,9 @@ import android.location.Geocoder
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Base64
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -22,8 +25,14 @@ import kotlinx.coroutines.tasks.await
 import java.io.ByteArrayOutputStream
 import androidx.core.graphics.scale
 import com.google.android.gms.location.LocationServices
+import com.google.firebase.firestore.GeoPoint
+import edu.ap.project_mobile_dev.retrofit.Entry
+import edu.ap.project_mobile_dev.retrofit.RetrofitClient
 import edu.ap.project_mobile_dev.ui.model.ActivityPost
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import retrofit2.Retrofit
 import java.util.Locale
 
 class AddViewModel : ViewModel() {
@@ -31,15 +40,42 @@ class AddViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(AddUiState())
     val uiState: StateFlow<AddUiState> = _uiState.asStateFlow()
     val MAX_FIRESTORE_IMAGE_SIZE = 1048487
-
+    var suggestions by mutableStateOf(emptyList<Entry>())
+    private var searchJob: Job?=null
     private val db = FirebaseFirestore.getInstance()
+    fun setCoords(entry: Entry) {
+        val city = entry.address?.city
+            ?: entry.address?.town
+            ?: entry.address?.village
+            ?: ""
+        val street = entry.address?.road ?: ""
+        _uiState.update { it.copy(lat=entry.lat, lon = entry.lon, city=city, street = street, location = entry.display_name?:"") }
+    }
+    fun search(query: String) {
+        if (query.length < 3 || query == uiState.value.lastQuery) {
+            suggestions = emptyList()
+            return
+        }
+        _uiState.update { it.copy(lastQuery = query) }
+        searchJob?.cancel()
+        searchJob=viewModelScope.launch {
+            delay(250)
+            _uiState.update { it.copy(loading = true) }
+            runCatching {
+                RetrofitClient.instance.getAddresses(query)
+            }.onSuccess {
+                suggestions=it
+            }.onFailure { suggestions = emptyList() }
+            _uiState.update { it.copy(loading = false) }
+        }
+    }
     fun updateLocationName(name: String) {
         _uiState.update { it.copy(name = name) }
         validateForm()
     }
 
-    fun updateCity(city: String) {
-        _uiState.update { it.copy(city = city) }
+    fun updateCity(location: String) {
+        _uiState.update { it.copy(location = location) }
         validateForm()
     }
 
@@ -136,7 +172,8 @@ class AddViewModel : ViewModel() {
                         lat = latitude.toString(),
                         lon = longitude.toString(),
                         city = city,
-                        location = street,
+                        street=street,
+                        location = label,
                         isUsingCurrentLocation = true
                     )
                 }
@@ -163,6 +200,7 @@ class AddViewModel : ViewModel() {
                         city = _uiState.value.city,
                         lat = _uiState.value.lat,
                         lon = _uiState.value.lon,
+                        street=_uiState.value.street
                     )
                     db.collection("activities")
                         .add(newActivity)
@@ -182,7 +220,8 @@ class AddViewModel : ViewModel() {
         val isValid = state.name.isNotBlank() &&
                 state.photoBase64.isNotBlank() &&
                 state.city.isNotBlank() &&
-                state.selectedCategory != null
+                state.selectedCategory != null &&
+                state.lat.isNotBlank() && state.lon.isNotBlank()
 
         _uiState.update { it.copy(isFormValid = isValid) }
     }

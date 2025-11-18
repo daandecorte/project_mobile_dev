@@ -62,7 +62,8 @@ fun ProfileScreen(
                 location = "Mechelsesteenweg 291",
                 city = "Antwerpen",
                 lat = "",
-                lon=""
+                lon="",
+                street=""
             ),
             Activity(
                 documentId = "2",
@@ -72,7 +73,8 @@ fun ProfileScreen(
                 location = "Hanzestedenplaats 1",
                 city = "Antwerpen",
                 lat = "",
-                lon=""
+                lon="",
+                street=""
             )
         )
     }
