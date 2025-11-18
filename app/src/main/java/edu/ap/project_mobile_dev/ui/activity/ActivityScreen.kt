@@ -1,8 +1,8 @@
 package edu.ap.project_mobile_dev.ui.activity
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.util.Base64
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,8 +23,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
+import coil.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.flow.update
 
 data class Review(
     val userName: String,
@@ -44,6 +49,15 @@ fun ActivityScreen(
     viewModel: ActivityViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    val context = LocalContext.current
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.let {
+            viewModel.onPhotoSelected(it, context)
+        }
+    }
 
     LaunchedEffect(activityId) {
         viewModel.loadActivity(activityId)
@@ -86,10 +100,6 @@ fun ActivityScreen(
         }
         return
     }
-
-    var userRating by remember { mutableStateOf(0) }
-    var reviewText by remember { mutableStateOf("") }
-    var showReviewDialog by remember { mutableStateOf(false) }
 
     val reviews = listOf(
         Review(
@@ -439,7 +449,7 @@ fun ActivityScreen(
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
-                        IconButton(onClick = { showReviewDialog = true }) {
+                        IconButton(onClick = { viewModel.showReviewDialog(true) }) {
                             Icon(Icons.Default.Add, "Voeg review toe", tint = Color.White)
                         }
                     }
@@ -453,9 +463,9 @@ fun ActivityScreen(
         }
     }
     // Write Review Section
-    if (showReviewDialog) {
+    if (uiState.showReviewDialog) {
         Dialog(
-            onDismissRequest = { showReviewDialog = false }
+            onDismissRequest = { viewModel.showReviewDialog(false) }
         ) {
             // container to control size and background
             Box(
@@ -483,8 +493,12 @@ fun ActivityScreen(
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
-                            IconButton(onClick = { showReviewDialog = false }) {
-                                Icon(Icons.Default.Close, contentDescription = "Sluit", tint = Color.White)
+                            IconButton(onClick = { viewModel.showReviewDialog(false) }) {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "Sluit",
+                                    tint = Color.White
+                                )
                             }
                         }
 
@@ -497,50 +511,38 @@ fun ActivityScreen(
 
                         Row {
                             repeat(5) { index ->
-                                IconButton(onClick = { userRating = index + 1 }) {
+                                IconButton(onClick = { viewModel.updateRating(index + 1) }) {
                                     Icon(
-                                        if (index < userRating) Icons.Default.Star else Icons.Default.StarBorder,
+                                        if (index < uiState.userRating) Icons.Default.Star else Icons.Default.StarBorder,
                                         contentDescription = null,
-                                        tint = if (index < userRating) Color(0xFFFFC107) else Color(0xFF6B7A8F),
+                                        tint = if (index < uiState.userRating) Color(0xFFFFC107) else Color(0xFF6B7A8F),
                                         modifier = Modifier.size(32.dp)
                                     )
                                 }
                             }
                         }
 
-                        Text(
-                            "Voeg een foto toe (optioneel)",
-                            color = Color(0xFFB0BEC5),
-                            modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
-                            fontSize = 14.sp
+                        if (uiState.errorMessage != null) {
+                            Text(
+                                text = uiState.errorMessage ?: "",
+                                color = Color.Red,
+                                fontSize = 14.sp,
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
+                        PhotoSection(
+                            photoUri = uiState.photoUri,
+                            onPhotoClick = {
+                                photoPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            },
+                            isPhotoLoading=uiState.isPhotoLoading
                         )
 
-                        Surface(
-                            modifier = Modifier
-                                .size(100.dp)
-                                .clip(RoundedCornerShape(8.dp)),
-                            color = Color(0xFF2C3E50)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(
-                                        Icons.Default.CameraAlt,
-                                        contentDescription = null,
-                                        tint = Color(0xFF6B7A8F),
-                                        modifier = Modifier.size(32.dp)
-                                    )
-                                    Text(
-                                        "Voeg foto toe",
-                                        color = Color(0xFF6B7A8F),
-                                        fontSize = 12.sp
-                                    )
-                                }
-                            }
-                        }
-
                         OutlinedTextField(
-                            value = reviewText,
-                            onValueChange = { reviewText = it },
+                            value = uiState.reviewText,
+                            onValueChange = { viewModel.updateReviewText(it) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 16.dp),
@@ -562,18 +564,14 @@ fun ActivityScreen(
                             horizontalArrangement = Arrangement.End
                         ) {
                             // Optional Cancel
-                            TextButton(onClick = { showReviewDialog = false }) {
+                            TextButton(onClick = { viewModel.showReviewDialog(false) }) {
                                 Text("Annuleren", color = Color(0xFFB0BEC5))
                             }
 
                             Spacer(modifier = Modifier.width(8.dp))
 
                             Button(
-                                onClick = {
-                                    showReviewDialog = false
-                                    userRating = 0
-                                    reviewText = ""
-                                },
+                                onClick = { viewModel.uploadReview() },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B35)),
                                 shape = RoundedCornerShape(8.dp)
                             ) {
@@ -687,5 +685,67 @@ fun ReviewItem(review: Review) {
                 fontSize = 14.sp
             )
         }
+    }
+}
+
+@Composable
+private fun PhotoSection(
+    photoUri: String?,
+    onPhotoClick: () -> Unit,
+    isPhotoLoading: Boolean
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(180.dp)
+            .background(
+                color = Color(0xFF1E2837),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .border(
+                width = 2.dp,
+                color = Color(0xFF2A3441),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .clickable(onClick = onPhotoClick),
+        contentAlignment = Alignment.Center
+    ) {
+        when {
+            isPhotoLoading -> {
+                CircularProgressIndicator(
+                    color = Color(0xFFFF6B35),
+                    strokeWidth = 3.dp
+                )
+            }
+
+            photoUri != null -> {
+                Image(
+                    painter = rememberAsyncImagePainter(photoUri),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp))
+                )
+            }
+
+            else -> {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PhotoCamera,
+                        contentDescription = "Upload foto",
+                        tint = Color(0xFF7A8694),
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Text(
+                        text = "Klik om foto te uploaden",
+                        color = Color(0xFF7A8694),
+                        fontSize = 14.sp
+                    )
+                }
+            }
+        }
+
     }
 }
