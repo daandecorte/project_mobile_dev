@@ -605,26 +605,18 @@ fun ReviewItem(review: ReviewDetail) {
                 }
             }
         }
-        /*
-        if (review.hasImage) {
-            Surface(
+
+        review.bitmap?.let {
+            Image(
+                bitmap = it.asImageBitmap(),
+                contentDescription = "Activity image",
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)
-                    .padding(top = 12.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                color = Color(0xFF2C3E50)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        Icons.Default.Image,
-                        contentDescription = null,
-                        tint = Color(0xFF6B7A8F),
-                        modifier = Modifier.size(48.dp)
-                    )
-                }
-            }
-        }*/
+                    .height(100.dp)
+                    .aspectRatio(it.width.toFloat() / it.height.toFloat())
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop
+            )
+        }
 
         if (review.description.isNotEmpty()) {
             Text(

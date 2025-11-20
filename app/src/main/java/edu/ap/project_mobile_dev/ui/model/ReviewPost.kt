@@ -6,6 +6,7 @@ data class ReviewPost(
     val userId: String,
     val activityId: String,
     val rating: Int,
+    val imageUrl: String,
     val date: Timestamp,
     val description: String,
     val likes: List<String>,

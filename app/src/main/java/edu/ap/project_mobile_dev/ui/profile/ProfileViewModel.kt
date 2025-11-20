@@ -1,11 +1,16 @@
 package edu.ap.project_mobile_dev.ui.profile
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import edu.ap.project_mobile_dev.ui.model.Review
+import edu.ap.project_mobile_dev.ui.model.ReviewDetail
+import edu.ap.project_mobile_dev.ui.model.ReviewProfile
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -71,23 +76,36 @@ class ProfileViewModel: ViewModel() {
                 val date = timestamp.toDate()
                 val formattedDate = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(date)
 
-                val review = Review(
+                val bitmap = decodeBase64ToBitmap(doc.getString("imageUrl") ?: "")
+
+                val reviewProfile = ReviewProfile(
                     activityId = activityTitle,
                     rating = rating,
                     description = description,
-                    date = formattedDate
+                    date = formattedDate,
+                    bitmap = bitmap
                 )
 
                 // Update uiState safely
                 _uiState.update { currentState ->
                     val updatedReviews = currentState.reviews.toMutableList()
-                    updatedReviews.add(review)
+                    updatedReviews.add(reviewProfile)
                     currentState.copy(reviews = updatedReviews)
                 }
 
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+        }
+    }
+
+    fun decodeBase64ToBitmap(base64String: String): Bitmap? {
+        return try {
+            val decodedBytes = Base64.decode(base64String, Base64.DEFAULT)
+            BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 }

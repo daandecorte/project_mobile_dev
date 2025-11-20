@@ -119,17 +119,8 @@ class ActivityViewModel : ViewModel() {
     }
 
     fun bitmapToBase64(bitmap: Bitmap, quality: Int =80): String {
-        val maxWidth=720;
-        val maxHeight=720;
-
-        val ratio = minOf(maxWidth.toFloat() / bitmap.width, maxHeight.toFloat() / bitmap.height, 1f)
-        val newWidth = (bitmap.width * ratio).toInt()
-        val newHeight = (bitmap.height * ratio).toInt()
-
-        val resizedBitmap = bitmap.scale(newWidth, newHeight)
-
         val outputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream) // compress to reduce size
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
         val byteArray = outputStream.toByteArray()
         return Base64.encodeToString(byteArray, Base64.DEFAULT)
     }
@@ -146,6 +137,7 @@ class ActivityViewModel : ViewModel() {
                 userId= currentUser?.uid ?: "Unknown",
                 activityId = _uiState.value.activityId,
                 rating = _uiState.value.userRating,
+                imageUrl = _uiState.value.photoBase64,
                 date = Timestamp.now(),
                 description = _uiState.value.reviewText,
                 likes = emptyList()
@@ -205,12 +197,15 @@ class ActivityViewModel : ViewModel() {
                 val date = timestamp.toDate()
                 val formattedDate = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(date)
 
+                val bitmap = decodeBase64ToBitmap(review.getString("imageUrl") ?: "")
+
                 val reviewDetail = ReviewDetail(
                     username = username,
                     rating = rating,
                     description = description,
                     date = formattedDate,
-                    likes = 2
+                    likes = 2,
+                    bitmap = bitmap
                 )
 
                 _uiState.update { currentState ->
@@ -222,6 +217,5 @@ class ActivityViewModel : ViewModel() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
     }
 }
