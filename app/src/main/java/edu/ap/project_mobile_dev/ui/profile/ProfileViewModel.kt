@@ -83,7 +83,8 @@ class ProfileViewModel: ViewModel() {
                     rating = rating,
                     description = description,
                     date = formattedDate,
-                    bitmap = bitmap
+                    bitmap = bitmap,
+                    likes = 0
                 )
 
                 // Update uiState safely

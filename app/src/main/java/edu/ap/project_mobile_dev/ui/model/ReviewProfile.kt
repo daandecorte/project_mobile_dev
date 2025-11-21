@@ -7,5 +7,6 @@ data class ReviewProfile (
     val rating: Int,
     val description: String,
     val date: String,
-    val bitmap: Bitmap?
+    val bitmap: Bitmap?,
+    val likes: Int
 )

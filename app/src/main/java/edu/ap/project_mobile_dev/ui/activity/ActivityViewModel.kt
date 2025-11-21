@@ -7,7 +7,6 @@ import android.net.Uri
 import android.provider.MediaStore
 import android.util.Base64
 import android.util.Log
-import androidx.core.graphics.scale
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
@@ -166,6 +165,51 @@ class ActivityViewModel : ViewModel() {
         }
     }
 
+    fun likeReview(reviewDetail : ReviewDetail){
+        val currentUser = FirebaseAuth.getInstance().currentUser?.uid;
+        val doc = db.collection("reviews").document(reviewDetail.docId)
+
+        if(reviewDetail.liked){
+            doc.get()
+                .addOnSuccessListener {
+                    doc.update("likes", FieldValue.arrayRemove(currentUser))
+                        .addOnSuccessListener {
+                            _uiState.update { currentState ->
+                                val updatedReviews = currentState.reviews.map { review ->
+                                    if (review.docId == reviewDetail.docId) {
+                                        review.copy(
+                                            likes = review.likes - 1,
+                                            liked = false
+                                        )
+                                    } else review
+                                }
+
+                                currentState.copy(reviews = updatedReviews)
+                            }
+                        }
+                }
+        } else {
+            doc.get()
+                .addOnSuccessListener {
+                    doc.update("likes", FieldValue.arrayUnion(currentUser))
+                        .addOnSuccessListener {
+                            _uiState.update { currentState ->
+                                val updatedReviews = currentState.reviews.map { review ->
+                                    if (review.docId == reviewDetail.docId) {
+                                        review.copy(
+                                            likes = review.likes + 1,
+                                            liked = true
+                                        )
+                                    } else review
+                                }
+
+                                currentState.copy(reviews = updatedReviews)
+                            }
+                        }
+                }
+        }
+    }
+
     fun resetReview(){
         _uiState.update { it.copy(showReviewDialog = false, userRating = 0, reviewText = "") }
     }
@@ -199,13 +243,23 @@ class ActivityViewModel : ViewModel() {
 
                 val bitmap = decodeBase64ToBitmap(review.getString("imageUrl") ?: "")
 
+                val likes = review.get("likes") as? List<String> ?: emptyList()
+
+                val uid = FirebaseAuth.getInstance().currentUser?.uid
+                var liked = false
+                if(likes.contains(uid)){
+                    liked = true
+                }
+
                 val reviewDetail = ReviewDetail(
+                    docId = review.id,
                     username = username,
                     rating = rating,
                     description = description,
                     date = formattedDate,
-                    likes = 2,
-                    bitmap = bitmap
+                    likes = likes.size,
+                    bitmap = bitmap,
+                    liked = liked
                 )
 
                 _uiState.update { currentState ->

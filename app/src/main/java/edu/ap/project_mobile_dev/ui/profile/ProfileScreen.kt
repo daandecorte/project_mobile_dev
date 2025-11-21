@@ -525,6 +525,28 @@ fun UserReviewCard(review: ReviewProfile) {
                 fontSize = 12.sp,
                 modifier = Modifier.padding(top = 8.dp)
             )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                IconButton(
+                    onClick = { },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        Icons.Default.ThumbUp,
+                        contentDescription = null,
+                        tint = Color(0xFF6B7A8F),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+                Text(
+                    review.likes.toString(),
+                    color = Color(0xFFB0BEC5),
+                    fontSize = 14.sp
+                )
+            }
         }
     }
 }

@@ -425,9 +425,15 @@ fun ActivityScreen(
                         }
                     }
 
-                    uiState.reviews.forEach { review ->
+                    uiState.reviews.forEachIndexed { index, review ->
                         Spacer(modifier = Modifier.height(16.dp))
-                        ReviewItem(review)
+
+                        ReviewItem(review, viewModel)
+
+                        if (index < uiState.reviews.lastIndex) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Divider(color = Color(0xFF2E3A47), thickness = 1.dp)
+                        }
                     }
                 }
             }
@@ -559,7 +565,7 @@ fun ActivityScreen(
 }
 
 @Composable
-fun ReviewItem(review: ReviewDetail) {
+fun ReviewItem(review: ReviewDetail, viewModel: ActivityViewModel) {
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -632,7 +638,7 @@ fun ReviewItem(review: ReviewDetail) {
             modifier = Modifier.padding(top = 8.dp)
         ) {
             IconButton(
-                onClick = { },
+                onClick = { viewModel.likeReview(review) },
                 modifier = Modifier.size(32.dp)
             ) {
                 Icon(
