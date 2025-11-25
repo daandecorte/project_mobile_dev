@@ -1,6 +1,5 @@
 package edu.ap.project_mobile_dev.ui.profile
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -26,18 +25,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import edu.ap.project_mobile_dev.MainActivity
-import edu.ap.project_mobile_dev.ui.add.Category
 import edu.ap.project_mobile_dev.ui.login.LoginViewModel
-import edu.ap.project_mobile_dev.ui.model.Activity
-import edu.ap.project_mobile_dev.ui.model.Review
+import edu.ap.project_mobile_dev.ui.model.ActivityProfile
 import edu.ap.project_mobile_dev.ui.model.ReviewProfile
-
-data class UserReview(
-    val activityName: String,
-    val rating: Int,
-    val text: String,
-    val date: String
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,31 +47,14 @@ fun ProfileScreen(
     var selectedTab by remember { mutableStateOf(0) }
     var isEditingUsername by remember { mutableStateOf(false) }
 
-    val favoriteActivities = remember {
-        listOf(
-            Activity(
-                documentId = "1",
-                title = "De Koninck Brouwerij",
-                description = "",
-                category = Category.CULTURE,
-                location = "Mechelsesteenweg 291",
-                city = "Antwerpen",
-                lat = "",
-                lon="",
-                street=""
-            ),
-            Activity(
-                documentId = "2",
-                title = "MAS Museum",
-                description= "",
-                category = Category.MONUMENT,
-                location = "Hanzestedenplaats 1",
-                city = "Antwerpen",
-                lat = "",
-                lon="",
-                street=""
-            )
-        )
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is ProfileEvent.NavigateToActivity -> {
+                    navController.navigate("activity/${event.id}")
+                }
+            }
+        }
     }
 
     LazyColumn(
@@ -239,7 +212,7 @@ fun ProfileScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Favorieten(" + favoriteActivities.size + ")")
+                            Text("Favorieten (" + uiState.favorites.size + ")")
                         }
                     }
                 }
@@ -288,14 +261,15 @@ fun ProfileScreen(
         // Content based on selected tab
         if (selectedTab == 0) {
             // Favorites
-            items(favoriteActivities) { activity ->
+            items(uiState.favorites) { activity ->
                 FavoriteActivityCard(
                     activity = activity,
-                    onRemove = { /* TODO: Remove from favorites */ }
+                    onRemove = { /* remove logic */ },
+                    onClick = { viewModel.goToActivity(it) }
                 )
             }
 
-            if (favoriteActivities.isEmpty()) {
+            if (uiState.favorites.isEmpty()) {
                 item {
                     EmptyStateCard(
                         icon = Icons.Default.FavoriteBorder,
@@ -373,25 +347,13 @@ fun ProfileScreen(
 }
 
 @Composable
-fun StatItem(count: Int, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            count.toString(),
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-        Text(
-            label,
-            fontSize = 14.sp,
-            color = Color(0xFFB0BEC5)
-        )
-    }
-}
-
-@Composable
-fun FavoriteActivityCard(activity: Activity, onRemove: () -> Unit) {
+fun FavoriteActivityCard(
+    activity: ActivityProfile,
+    onRemove: () -> Unit,
+    onClick: (String) -> Unit
+) {
     Surface(
+        onClick = { onClick(activity.activityId) },
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
@@ -407,14 +369,14 @@ fun FavoriteActivityCard(activity: Activity, onRemove: () -> Unit) {
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    activity.title,
+                    activity.name,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top = 4.dp)
+                    modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
                 ) {
                     Icon(
                         Icons.Default.LocationOn,
@@ -423,16 +385,16 @@ fun FavoriteActivityCard(activity: Activity, onRemove: () -> Unit) {
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
-                        activity.city,
+                        activity.location,
                         color = Color(0xFFB0BEC5),
                         fontSize = 14.sp,
                         modifier = Modifier.padding(start = 4.dp)
                     )
                 }
+
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color.Transparent,
-                    modifier = Modifier.padding(top = 8.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color(0xFFFF6B35)
                 ) {
                     Box(
                         modifier = Modifier
@@ -442,14 +404,25 @@ fun FavoriteActivityCard(activity: Activity, onRemove: () -> Unit) {
                                 ),
                                 shape = RoundedCornerShape(14.dp)
                             )
-                            .padding(horizontal = 12.dp, vertical = 6.dp)
                     ) {
-                        Text(
-                            "${activity.category}",
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            color = Color.White,
-                            fontSize = 12.sp
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(start = 10.dp)
+                        ) {
+                            Icon(
+                                imageVector = activity.category.icon,
+                                contentDescription = "Icon",
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                activity.category.displayName,
+                                modifier = Modifier
+                                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                                    .offset(-4.dp),
+                                color = Color.White,
+                                fontSize = 12.sp
+                            )
+                        }
                     }
                 }
             }
