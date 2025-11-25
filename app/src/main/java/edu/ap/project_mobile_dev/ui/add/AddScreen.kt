@@ -166,7 +166,7 @@ fun AddScreen(
                         .then(
                             if (!uiState.isFormValid) {
                                 Modifier.background(
-                                    color = Color(0xFF334155).copy(alpha = 0.5f),
+                                    color = Color(0xFF1E2837),
                                     shape = RoundedCornerShape(12.dp)
                                 )
                             } else Modifier
@@ -185,7 +185,13 @@ fun AddScreen(
                             text = "Locatie Opslaan",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = if(uiState.isFormValid) {
+                                Color.White
+                            }
+                            else {
+                                Color.Gray
+                            }
+
                         )
                     }
                 }
@@ -265,7 +271,7 @@ private fun LocationNameField(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = "Naam van de locatie",
+            text = "Naam van de activiteit",
             color = Color.White,
             fontSize = 14.sp
         )
@@ -295,7 +301,7 @@ private fun CityField(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = "Stad",
+            text = "Locatie",
             color = Color.White,
             fontSize = 14.sp
         )
@@ -305,7 +311,7 @@ private fun CityField(
                 onValueChange(it)
                 viewModel.search(it)
             },
-            placeholder = { Text("Bijv. Antwerpen", color = Color(0xFF5A6470)) },
+            placeholder = { Text("Zoek een adres", color = Color(0xFF5A6470)) },
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = Color.White,

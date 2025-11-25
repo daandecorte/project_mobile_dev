@@ -148,7 +148,7 @@ fun OsmdroidMapView(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                "${activity.location} • ${activity.city}",
+                                "${activity.street} • ${activity.city}",
                                 fontSize = 14.sp,
                                 color = androidx.compose.ui.graphics.Color(0xFFB0BEC5)
                             )
