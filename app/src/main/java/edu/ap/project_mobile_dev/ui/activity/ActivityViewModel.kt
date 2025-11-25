@@ -7,7 +7,6 @@ import android.net.Uri
 import android.provider.MediaStore
 import android.util.Base64
 import android.util.Log
-import androidx.core.graphics.scale
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
@@ -24,6 +23,10 @@ import java.io.ByteArrayOutputStream
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
+import edu.ap.project_mobile_dev.ui.model.ReviewDetail
+import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 
 class ActivityViewModel : ViewModel() {
@@ -56,6 +59,10 @@ class ActivityViewModel : ViewModel() {
                         bitmap = decodeBase64ToBitmap(doc.getString("imageUrl") ?: ""),
                     )
                     _uiState.update { it.copy(activity = activity, isLoading = false) }
+
+                    viewModelScope.launch {
+                        getReviews()
+                    }
                 } else {
                     _uiState.update { it.copy(errorMessage = "No such activity", isLoading = false) }
                     Log.w("Firestore", "No such document with id: $documentId")
@@ -111,17 +118,8 @@ class ActivityViewModel : ViewModel() {
     }
 
     fun bitmapToBase64(bitmap: Bitmap, quality: Int =80): String {
-        val maxWidth=720;
-        val maxHeight=720;
-
-        val ratio = minOf(maxWidth.toFloat() / bitmap.width, maxHeight.toFloat() / bitmap.height, 1f)
-        val newWidth = (bitmap.width * ratio).toInt()
-        val newHeight = (bitmap.height * ratio).toInt()
-
-        val resizedBitmap = bitmap.scale(newWidth, newHeight)
-
         val outputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream) // compress to reduce size
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
         val byteArray = outputStream.toByteArray()
         return Base64.encodeToString(byteArray, Base64.DEFAULT)
     }
@@ -132,9 +130,13 @@ class ActivityViewModel : ViewModel() {
 
     fun uploadReview(){
         if(_uiState.value.userRating in 1..5){
+            val currentUser = FirebaseAuth.getInstance().currentUser;
+
             val review = ReviewPost (
+                userId= currentUser?.uid ?: "Unknown",
                 activityId = _uiState.value.activityId,
                 rating = _uiState.value.userRating,
+                imageUrl = _uiState.value.photoBase64,
                 date = Timestamp.now(),
                 description = _uiState.value.reviewText,
                 likes = emptyList()
@@ -160,8 +162,51 @@ class ActivityViewModel : ViewModel() {
                 .addOnFailureListener { e ->
                     Log.e("Firestore", "Failed to upload review", e)
                 }
+        }
+    }
 
+    fun likeReview(reviewDetail : ReviewDetail){
+        val currentUser = FirebaseAuth.getInstance().currentUser?.uid;
+        val doc = db.collection("reviews").document(reviewDetail.docId)
 
+        if(reviewDetail.liked){
+            doc.get()
+                .addOnSuccessListener {
+                    doc.update("likes", FieldValue.arrayRemove(currentUser))
+                        .addOnSuccessListener {
+                            _uiState.update { currentState ->
+                                val updatedReviews = currentState.reviews.map { review ->
+                                    if (review.docId == reviewDetail.docId) {
+                                        review.copy(
+                                            likes = review.likes - 1,
+                                            liked = false
+                                        )
+                                    } else review
+                                }
+
+                                currentState.copy(reviews = updatedReviews)
+                            }
+                        }
+                }
+        } else {
+            doc.get()
+                .addOnSuccessListener {
+                    doc.update("likes", FieldValue.arrayUnion(currentUser))
+                        .addOnSuccessListener {
+                            _uiState.update { currentState ->
+                                val updatedReviews = currentState.reviews.map { review ->
+                                    if (review.docId == reviewDetail.docId) {
+                                        review.copy(
+                                            likes = review.likes + 1,
+                                            liked = true
+                                        )
+                                    } else review
+                                }
+
+                                currentState.copy(reviews = updatedReviews)
+                            }
+                        }
+                }
         }
     }
 
@@ -175,5 +220,56 @@ class ActivityViewModel : ViewModel() {
 
     fun updateRating(rating: Int){
         _uiState.update { it.copy(userRating = rating) }
+    }
+
+    suspend fun getReviews() {
+        _uiState.update { it.copy(reviews = emptyList()) }
+
+        val collection = db.collection("reviews")
+
+        try{
+            val reviews = collection.whereEqualTo("activityId", _uiState.value.activityId).get().await()
+
+            for(review in reviews){
+                val user = db.collection("users").document(review.getString("userId") ?: "").get().await()
+                val username = user.getString("username") ?: ""
+
+                val rating = (review.getLong("rating") ?: 0L).toInt()
+                val description = review.getString("description") ?: ""
+
+                val timestamp = review.getTimestamp("date") ?: com.google.firebase.Timestamp.now()
+                val date = timestamp.toDate()
+                val formattedDate = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(date)
+
+                val bitmap = decodeBase64ToBitmap(review.getString("imageUrl") ?: "")
+
+                val likes = review.get("likes") as? List<String> ?: emptyList()
+
+                val uid = FirebaseAuth.getInstance().currentUser?.uid
+                var liked = false
+                if(likes.contains(uid)){
+                    liked = true
+                }
+
+                val reviewDetail = ReviewDetail(
+                    docId = review.id,
+                    username = username,
+                    rating = rating,
+                    description = description,
+                    date = formattedDate,
+                    likes = likes.size,
+                    bitmap = bitmap,
+                    liked = liked
+                )
+
+                _uiState.update { currentState ->
+                    val updatedReviews = currentState.reviews.toMutableList()
+                    updatedReviews.add(reviewDetail)
+                    currentState.copy(reviews = updatedReviews)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }

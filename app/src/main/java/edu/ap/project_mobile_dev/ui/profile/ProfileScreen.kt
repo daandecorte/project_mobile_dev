@@ -1,6 +1,7 @@
 package edu.ap.project_mobile_dev.ui.profile
 
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,6 +30,7 @@ import edu.ap.project_mobile_dev.ui.add.Category
 import edu.ap.project_mobile_dev.ui.login.LoginViewModel
 import edu.ap.project_mobile_dev.ui.model.Activity
 import edu.ap.project_mobile_dev.ui.model.Review
+import edu.ap.project_mobile_dev.ui.model.ReviewProfile
 
 data class UserReview(
     val activityName: String,
@@ -189,17 +193,6 @@ fun ProfileScreen(
                                 }
                             }
                         }
-
-                        // Stats
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            StatItem(count = favoriteActivities.size, label = "Favorieten")
-                            StatItem(count = uiState.reviews.size, label = "Reviews")
-                        }
                     }
                 }
             }
@@ -246,7 +239,7 @@ fun ProfileScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Favorieten")
+                            Text("Favorieten(" + favoriteActivities.size + ")")
                         }
                     }
                 }
@@ -285,7 +278,7 @@ fun ProfileScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Reviews")
+                            Text("Reviews (" + uiState.reviews.size + ")")
                         }
                     }
                 }
@@ -311,7 +304,6 @@ fun ProfileScreen(
                 }
             }
         } else {
-            // Reviews
             items(uiState.reviews) { review ->
                 UserReviewCard(review = review)
             }
@@ -473,7 +465,7 @@ fun FavoriteActivityCard(activity: Activity, onRemove: () -> Unit) {
 }
 
 @Composable
-fun UserReviewCard(review: Review) {
+fun UserReviewCard(review: ReviewProfile) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -505,13 +497,27 @@ fun UserReviewCard(review: Review) {
                 }
             }
 
-            Text(
-                review.description,
-                color = Color(0xFFB0BEC5),
-                modifier = Modifier.padding(top = 8.dp),
-                fontSize = 14.sp,
-                lineHeight = 20.sp
-            )
+            review.bitmap?.let {
+                Image(
+                    bitmap = it.asImageBitmap(),
+                    contentDescription = "Activity image",
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .height(100.dp)
+                        .aspectRatio(it.width.toFloat() / it.height.toFloat())
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
+            if (review.description.isNotEmpty()) {
+                Text(
+                    review.description,
+                    color = Color(0xFFB0BEC5),
+                    modifier = Modifier.padding(top = 8.dp),
+                    lineHeight = 20.sp
+                )
+            }
 
             Text(
                 review.date,
@@ -519,6 +525,28 @@ fun UserReviewCard(review: Review) {
                 fontSize = 12.sp,
                 modifier = Modifier.padding(top = 8.dp)
             )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                IconButton(
+                    onClick = { },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        Icons.Default.ThumbUp,
+                        contentDescription = null,
+                        tint = Color(0xFF6B7A8F),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+                Text(
+                    review.likes.toString(),
+                    color = Color(0xFFB0BEC5),
+                    fontSize = 14.sp
+                )
+            }
         }
     }
 }

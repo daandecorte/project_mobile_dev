@@ -1,6 +1,7 @@
 package edu.ap.project_mobile_dev.ui.activity
 
 import edu.ap.project_mobile_dev.ui.model.ActivityDetail
+import edu.ap.project_mobile_dev.ui.model.ReviewDetail
 
 data class ActivityUIState(
     val activity: ActivityDetail? = null,
@@ -13,5 +14,7 @@ data class ActivityUIState(
     val isPhotoLoading: Boolean = false,
     val userRating: Int = 0,
     val reviewText: String = "",
-    val showReviewDialog: Boolean = false
+    val showReviewDialog: Boolean = false,
+    val reviews: List<ReviewDetail> = emptyList(),
+    val reviewList: List<String> = emptyList()
 )
