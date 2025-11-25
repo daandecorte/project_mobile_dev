@@ -4,6 +4,7 @@ import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.util.Log
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.toLowerCase
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,6 +24,8 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import org.osmdroid.util.GeoPoint
 import java.util.Locale
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 class HomeViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -116,6 +119,12 @@ class HomeViewModel : ViewModel() {
         }
         filterActivities()
     }
+    fun updateSortBy(sortBy: SortBy) {
+        _uiState.update {
+            it.copy(sortBy=sortBy)
+        }
+        filterActivities()
+    }
 
     fun toggleCategory(category: String) {
         _uiState.update { currentState ->
@@ -135,15 +144,34 @@ class HomeViewModel : ViewModel() {
 
     private fun filterActivities() {
         _uiState.update { currentState ->
-            val filtered = currentState.activities.filter { activity ->
+            var filtered = currentState.activities.filter { activity ->
                 val matchesCategory = currentState.selectedCategories.isEmpty() ||
                         currentState.selectedCategories.contains(activity.category.displayName)
                 val matchesSearch = currentState.searchQuery.isEmpty() ||
-                        activity.location.contains(currentState.searchQuery, ignoreCase = true) ||
-                        activity.city.contains(currentState.searchQuery, ignoreCase = true)
+                        activity.location.contains(currentState.searchQuery.trim(), ignoreCase = true) ||
+                        activity.city.contains(currentState.searchQuery.trim(), ignoreCase = true)
                 matchesCategory && matchesSearch
+            }
+            filtered = when(currentState.sortBy) {
+                SortBy.NONE->filtered
+                SortBy.LOCATION -> {
+                    filtered.sortedBy {
+                        distanceInMeters(
+                            currentState.currentLocation.latitude,
+                            currentState.currentLocation.longitude,
+                            it.lat.toDouble(),
+                            it.lon.toDouble()
+                        )
+                    }
+                }
+                SortBy.RATINGH -> filtered
+                SortBy.RATINGL -> filtered
+                SortBy.ALPHABETICAL -> filtered.sortedBy { it.title.lowercase() }
             }
             currentState.copy(filteredActivities = filtered)
         }
+    }
+    fun distanceInMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        return sqrt((lat2 - lat1).pow(2) + (lon2 - lon1).pow(2))
     }
 }

@@ -1,9 +1,11 @@
 package edu.ap.project_mobile_dev.ui.home
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,9 +33,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.ap.project_mobile_dev.ui.model.Activity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.window.Popup
 import androidx.navigation.NavController
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import edu.ap.project_mobile_dev.ui.add.Category
@@ -41,7 +51,8 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import edu.ap.project_mobile_dev.ui.map.OsmdroidMapView
 
-@OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("PermissionLaunchedDuringComposition")
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun HomeScreen(
     onActivityClick: (Activity) -> Unit,
@@ -50,6 +61,14 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var sortByExpanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val permissionState = rememberPermissionState(android.Manifest.permission.ACCESS_FINE_LOCATION)
+    if (!permissionState.status.isGranted) {
+        permissionState.launchPermissionRequest()
+        viewModel.getCurrentLocation(context)
+    }
+    else viewModel.getCurrentLocation(context)
 
     Scaffold(
         topBar = {
@@ -147,18 +166,80 @@ fun HomeScreen(
                     uiState = uiState
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                IconButton(
-                    onClick = { },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(Color(0xFF2C3E50), RoundedCornerShape(8.dp))
+                Box(
+                    modifier = Modifier.wrapContentSize(Alignment.TopEnd)
                 ) {
-                    Icon(
-                        Icons.Default.FilterList,
-                        contentDescription = "Filter",
-                        tint = Color.White
-                    )
+                    IconButton(
+                        onClick = { sortByExpanded=!sortByExpanded },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(Color(0xFF2C3E50), RoundedCornerShape(8.dp))
+                    ) {
+                        Icon(
+                            Icons.Default.FilterList,
+                            contentDescription = "Filter",
+                            tint = Color.White
+                        )
+                    }
+                    if(sortByExpanded) {
+                        Popup(
+                            alignment = Alignment.TopEnd,
+                            offset = IntOffset(0, 170)
+                        ) {
+                            Surface(
+                                shape=RoundedCornerShape(8.dp),
+                                color = Color(0xFF2C3E50),
+                                shadowElevation = 8.dp,
+                                modifier = Modifier.width(200.dp)
+                            ) {
+
+                                Column(
+                                    modifier = Modifier.background(Color(0xFF2C3E50)).padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text("Sorteer op:")
+                                    Divider(
+                                        modifier = Modifier.padding(vertical = 4.dp)
+                                    )
+                                    SortOption(
+                                        text = "Afstand",
+                                        selected = uiState.sortBy == SortBy.LOCATION,
+                                        onClick = {
+                                            viewModel.updateSortBy(SortBy.LOCATION)
+                                            sortByExpanded = false
+                                        }
+                                    )
+                                    SortOption(
+                                        text = "Rating (Hoog-Laag)",
+                                        selected = uiState.sortBy == SortBy.RATINGH,
+                                        onClick = {
+                                            viewModel.updateSortBy(SortBy.RATINGH)
+                                            sortByExpanded = false
+                                        }
+                                    )
+                                    SortOption(
+                                        text = "Rating (Laag-Hoog)",
+                                        selected = uiState.sortBy == SortBy.RATINGL,
+                                        onClick = {
+                                            viewModel.updateSortBy(SortBy.RATINGL)
+                                            sortByExpanded = false
+                                        }
+                                    )
+                                    SortOption(
+                                        text = "Alfabetisch",
+                                        selected = uiState.sortBy == SortBy.ALPHABETICAL,
+                                        onClick = {
+                                            viewModel.updateSortBy(SortBy.ALPHABETICAL)
+                                            sortByExpanded = false
+                                        }
+                                    )
+                                }
+
+                            }
+                        }
+                    }
                 }
+
             }
             var isExpanded by remember { mutableStateOf(false) }
                 Column(
@@ -303,7 +384,7 @@ fun HomeScreen(
 fun TabButton(
     tab: Int,
     text: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -462,6 +543,43 @@ fun ActivityCard(activity: Activity, onClick: () -> Unit) {
                     }
                 }
             }
+        }
+    }
+}
+@Composable
+fun SortOption(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(8.dp),
+        color = if (selected) Color(0xFF2C3E50) else Color.Transparent,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = if (selected) {
+                        Brush.horizontalGradient(
+                            colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
+                        )
+                    } else {
+                        Brush.horizontalGradient(
+                            colors = listOf(Color.Transparent, Color.Transparent)
+                        )
+                    },
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .padding(12.dp)
+        ) {
+            Text(
+                text,
+                color = Color.White,
+                fontSize = 14.sp
+            )
         }
     }
 }

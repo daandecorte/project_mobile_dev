@@ -1,5 +1,6 @@
 package edu.ap.project_mobile_dev.ui.map
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.LightingColorFilter
@@ -56,6 +57,7 @@ import edu.ap.project_mobile_dev.R
 import edu.ap.project_mobile_dev.ui.home.HomeScreen
 import edu.ap.project_mobile_dev.ui.model.Activity
 
+@SuppressLint("PermissionLaunchedDuringComposition")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun OsmdroidMapView(
@@ -66,12 +68,6 @@ fun OsmdroidMapView(
     var inputText by remember { mutableStateOf("") }
     var mapView by remember { mutableStateOf<MapView?>(null) }
     val uiState by viewModel.uiState.collectAsState()
-    val permissionState = rememberPermissionState(android.Manifest.permission.ACCESS_FINE_LOCATION)
-    if (!permissionState.status.isGranted) {
-        permissionState.launchPermissionRequest()
-        viewModel.getCurrentLocation(context)
-    }
-    else viewModel.getCurrentLocation(context)
     var selectedActivity by remember { mutableStateOf<Activity?>(null) }
     Box(Modifier.fillMaxSize()) {
         AndroidView(
