@@ -264,7 +264,7 @@ fun ProfileScreen(
             items(uiState.favorites) { activity ->
                 FavoriteActivityCard(
                     activity = activity,
-                    onRemove = { /* remove logic */ },
+                    onRemove = { viewModel.removeFavorite(activity.activityId) },
                     onClick = { viewModel.goToActivity(it) }
                 )
             }
@@ -431,6 +431,12 @@ fun FavoriteActivityCard(
                     Icons.Default.Delete,
                     contentDescription = "Verwijder",
                     tint = Color(0xFF6B7A8F)
+                )
+                Icon(
+                    imageVector = Icons.Default.Favorite,
+                    contentDescription = "Verwijder",
+                    tint = Color(0xFFFF6B35),
+                    modifier = Modifier.size(28.dp)
                 )
             }
         }

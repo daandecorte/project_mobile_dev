@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import edu.ap.project_mobile_dev.ui.add.Category
 import edu.ap.project_mobile_dev.ui.model.ActivityProfile
@@ -142,6 +143,20 @@ class ProfileViewModel: ViewModel() {
         viewModelScope.launch {
             _events.emit(ProfileEvent.NavigateToActivity(id))
         }
+    }
+
+    fun removeFavorite(id: String) {
+        val uid = currentUser?.uid ?: ""
+
+        db.collection("users")
+            .document(uid)
+            .update("favorites", FieldValue.arrayRemove(id))
+            .addOnSuccessListener {
+                _uiState.update { currentState ->
+                    val updatedFavorites = currentState.favorites.filter { it.activityId != id }
+                    currentState.copy(favorites = updatedFavorites)
+                }
+            }
     }
 
     fun decodeBase64ToBitmap(base64String: String): Bitmap? {
