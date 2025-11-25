@@ -12,4 +12,5 @@ data class Activity(
     val city: String,
     val lat: String,
     val lon: String,
+    val averageRating: Int
 )

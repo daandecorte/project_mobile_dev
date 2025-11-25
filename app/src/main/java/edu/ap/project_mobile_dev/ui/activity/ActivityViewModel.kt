@@ -27,6 +27,7 @@ import edu.ap.project_mobile_dev.ui.model.ReviewDetail
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlin.math.round
 
 
 class ActivityViewModel : ViewModel() {
@@ -54,7 +55,7 @@ class ActivityViewModel : ViewModel() {
                         category = Category.valueOf(doc.getString("category") ?: "OTHER"),
                         location = doc.getString("location") ?: "",
                         city = doc.getString("city") ?: "",
-                        ratingM = 0,
+                        ratingM = (doc.getString("averageRating")?:"0").toInt(),
                         ratings = emptyList(),
                         bitmap = decodeBase64ToBitmap(doc.getString("imageUrl") ?: ""),
                     )
@@ -148,6 +149,16 @@ class ActivityViewModel : ViewModel() {
             db.collection("reviews")
                 .add(review)
                 .addOnSuccessListener { documentRef ->
+                    _uiState.update { it.copy(reviews = _uiState.value.reviews+ ReviewDetail(
+                        docId = documentRef.id,
+                        username = currentUser?.displayName ?: "you",
+                        rating = _uiState.value.userRating,
+                        date = SimpleDateFormat("dd/MM/yyyy HH:mm").format(Timestamp.now().toDate()),
+                        description = _uiState.value.reviewText,
+                        likes = 0,
+                        bitmap = decodeBase64ToBitmap(_uiState.value.photoBase64),
+                        liked=false
+                    )) }
                     val currentUser = FirebaseAuth.getInstance().currentUser;
 
                     db.collection("users")
@@ -159,6 +170,11 @@ class ActivityViewModel : ViewModel() {
                         }
                         .addOnFailureListener { e ->
                             Log.e("Firestore", "Failed to update user", e)
+                        }
+                    val activityDoc = db.collection("activities").document(uiState.value.activityId)
+                    activityDoc.get()
+                        .addOnSuccessListener {
+                            activityDoc.update("averageRating", round(uiState.value.reviews.sumOf { it.rating.toDouble() }/(uiState.value.reviews.count())).toInt().toString())
                         }
                 }
                 .addOnFailureListener { e ->

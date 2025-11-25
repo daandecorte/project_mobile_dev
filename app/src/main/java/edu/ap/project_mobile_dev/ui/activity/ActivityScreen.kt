@@ -225,8 +225,7 @@ fun ActivityScreen(
                     )
 
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 6.dp)) {
-                        Text("4.5", fontSize = 20.sp, color = Color.White)
-                        repeat(5) {
+                        repeat(uiState.activity?.ratingM?:0) {
                             Icon(
                                 Icons.Default.Star,
                                 contentDescription = null,
@@ -234,7 +233,7 @@ fun ActivityScreen(
                                 modifier = Modifier.size(18.dp).padding(horizontal = 2.dp)
                             )
                         }
-                        Text("(127 reviews)", color = Color(0xFFB0BEC5), fontSize = 12.sp, modifier = Modifier.padding(start = 4.dp))
+                        Text("("+uiState.reviews.count().toString() + " reviews)", color = Color(0xFFB0BEC5), fontSize = 12.sp, modifier = Modifier.padding(start = 4.dp))
                     }
                 }
             }

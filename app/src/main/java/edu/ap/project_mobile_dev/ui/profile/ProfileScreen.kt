@@ -68,7 +68,8 @@ fun ProfileScreen(
                 city = "Antwerpen",
                 lat = "",
                 lon="",
-                street=""
+                street="",
+                averageRating = 0,
             ),
             Activity(
                 documentId = "2",
@@ -79,7 +80,8 @@ fun ProfileScreen(
                 city = "Antwerpen",
                 lat = "",
                 lon="",
-                street=""
+                street="",
+                averageRating = 0,
             )
         )
     }
