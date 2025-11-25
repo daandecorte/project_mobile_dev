@@ -60,6 +60,8 @@ class ActivityViewModel : ViewModel() {
                     )
                     _uiState.update { it.copy(activity = activity, isLoading = false) }
 
+                    getSaved()
+
                     viewModelScope.launch {
                         getReviews()
                     }
@@ -270,6 +272,43 @@ class ActivityViewModel : ViewModel() {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    private val userUid = FirebaseAuth.getInstance().currentUser?.uid;
+
+    fun getSaved(){
+        val doc = db.collection("users").document(userUid ?: "")
+
+        doc.get()
+            .addOnSuccessListener { document ->
+                val favorites = document.get("favorites") as? List<String> ?: emptyList()
+
+                if(favorites.contains(uiState.value.activityId)){
+                    _uiState.update { it.copy(saved = true) }
+                }
+            }
+    }
+
+    fun saveActivity(){
+        val doc = db.collection("users").document(userUid ?: "")
+
+        if(!_uiState.value.saved){
+            doc.get()
+                .addOnSuccessListener {
+                    doc.update("favorites", FieldValue.arrayUnion(_uiState.value.activityId))
+                        .addOnSuccessListener {
+                            _uiState.update { it.copy(saved = true) }
+                        }
+                }
+        } else {
+            doc.get()
+                .addOnSuccessListener {
+                    doc.update("favorites", FieldValue.arrayRemove(_uiState.value.activityId))
+                        .addOnSuccessListener {
+                            _uiState.update { it.copy(saved = false) }
+                        }
+                }
         }
     }
 }

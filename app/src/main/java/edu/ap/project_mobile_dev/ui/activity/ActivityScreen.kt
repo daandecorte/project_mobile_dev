@@ -29,8 +29,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
 import coil.compose.rememberAsyncImagePainter
-import edu.ap.project_mobile_dev.ui.model.Review
 import edu.ap.project_mobile_dev.ui.model.ReviewDetail
+import androidx.compose.ui.unit.DpOffset
 
 @Composable
 fun ActivityScreen(
@@ -112,7 +112,7 @@ fun ActivityScreen(
                         bitmap = it.asImageBitmap(),
                         contentDescription = "Activity image",
                         modifier = Modifier
-                            .fillMaxSize(),  // full width + height
+                            .fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
                 } ?: run {
@@ -136,7 +136,7 @@ fun ActivityScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
-                            brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                            brush = Brush.verticalGradient(
                                 colors = listOf(Color.Transparent, Color(0xCC0F172A)),
                                 startY = 100f
                             )
@@ -157,12 +157,34 @@ fun ActivityScreen(
                             .background(Color(0x80000000), CircleShape)
                             .size(36.dp)
                     ) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Terug", tint = Color.White, modifier = Modifier.size(28.dp))
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Terug",
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp)
+                        )
                     }
 
                     IconButton(onClick = onProfileClick) {
                         Icon(Icons.Default.AccountCircle, contentDescription = "Profiel", tint = Color.White, modifier = Modifier.size(40.dp))
                     }
+                }
+
+                // Heart icon (bottom right)
+                IconButton(
+                    onClick = { viewModel.saveActivity() },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp)
+                        .background(Color(0x80000000), CircleShape)
+                        .size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = if (uiState.saved) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Bewaar activiteit",
+                        tint = if (uiState.saved) Color(0xFFFF6B35) else Color.White,
+                        modifier = Modifier.size(28.dp)
+                    )
                 }
 
                 // Bottom section: title + stats
