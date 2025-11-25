@@ -25,6 +25,7 @@ import kotlinx.coroutines.withContext
 import org.osmdroid.util.GeoPoint
 import java.util.Locale
 import kotlin.math.pow
+import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 class HomeViewModel : ViewModel() {
@@ -94,7 +95,8 @@ class HomeViewModel : ViewModel() {
                             city = doc.getString("city") ?: "",
                             lat=doc.getString("lat") ?: "",
                             lon=doc.getString("lon") ?: "",
-                            street = doc.getString("street")?:""
+                            street = doc.getString("street")?:"",
+                            averageRating = (doc.getString("averageRating")?.toDoubleOrNull() ?: 0.0).roundToInt()
                         )
                     } catch (e: Exception) {
                         null

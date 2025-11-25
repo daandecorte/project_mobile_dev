@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -509,36 +510,50 @@ fun ActivityCard(activity: Activity, onClick: () -> Unit) {
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = Color(0xFFFF6B35)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
-                            ),
-                            shape = RoundedCornerShape(14.dp)
-                        )
+            Row() {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color(0xFFFF6B35)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(start = 10.dp)
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
+                                ),
+                                shape = RoundedCornerShape(14.dp)
+                            )
                     ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(start = 10.dp)
+                        ) {
+                            Icon(
+                                imageVector = activity.category.icon,
+                                contentDescription = "Icon",
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                activity.category.displayName,
+                                modifier = Modifier
+                                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                                    .offset(-4.dp),
+                                color = Color.White,
+                                fontSize = 12.sp
+                            )
+
+                        }
+
+                    }
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 6.dp)) {
+                    repeat(activity.averageRating ?: 0) {
                         Icon(
-                            imageVector = activity.category.icon,
-                            contentDescription = "Icon",
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            activity.category.displayName,
-                            modifier = Modifier
-                                .padding(horizontal = 12.dp, vertical = 4.dp)
-                                .offset(-4.dp),
-                            color = Color.White,
-                            fontSize = 12.sp
+                            Icons.Default.Star,
+                            contentDescription = null,
+                            tint = Color(0xFFFFC107),
+                            modifier = Modifier.size(18.dp).padding(horizontal = 2.dp)
                         )
                     }
                 }
