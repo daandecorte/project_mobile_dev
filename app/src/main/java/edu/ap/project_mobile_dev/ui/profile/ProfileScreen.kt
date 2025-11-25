@@ -428,11 +428,6 @@ fun FavoriteActivityCard(
             }
             IconButton(onClick = onRemove) {
                 Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Verwijder",
-                    tint = Color(0xFF6B7A8F)
-                )
-                Icon(
                     imageVector = Icons.Default.Favorite,
                     contentDescription = "Verwijder",
                     tint = Color(0xFFFF6B35),
