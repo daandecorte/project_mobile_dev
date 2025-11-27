@@ -61,9 +61,8 @@ class ActivityViewModel : ViewModel() {
                     )
                     _uiState.update { it.copy(activity = activity, isLoading = false) }
 
-                    getSaved()
-
                     viewModelScope.launch {
+                        getSaved()
                         getReviews()
                     }
                 } else {
