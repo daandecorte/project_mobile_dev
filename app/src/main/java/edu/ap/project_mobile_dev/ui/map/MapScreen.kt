@@ -69,7 +69,9 @@ fun OsmdroidMapView(
     var mapView by remember { mutableStateOf<MapView?>(null) }
     val uiState by viewModel.uiState.collectAsState()
     var selectedActivity by remember { mutableStateOf<Activity?>(null) }
-    Box(Modifier.fillMaxSize()) {
+    Box(
+        Modifier.fillMaxSize()
+    ) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { context ->
