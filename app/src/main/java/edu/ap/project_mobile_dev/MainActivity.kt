@@ -35,6 +35,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import edu.ap.project_mobile_dev.ui.add.AddScreen
 import edu.ap.project_mobile_dev.ui.activity.ActivityScreen
+import edu.ap.project_mobile_dev.ui.chat.ChatScreen
 import edu.ap.project_mobile_dev.ui.home.HomeScreen
 import edu.ap.project_mobile_dev.ui.home.HomeViewModel
 import edu.ap.project_mobile_dev.ui.profile.ProfileScreen
@@ -74,8 +75,9 @@ class MainActivity : ComponentActivity() {
                         composable("home"){
 
                          HomeScreen(
-                            onActivityClick = { activity -> navController.navigate("activity/${activity.documentId}") },
-                            onProfileClick = { navController.navigate("profile") },
+                             onActivityClick = { activity -> navController.navigate("activity/${activity.documentId}") },
+                             onChatClick = { navController.navigate("chat") },
+                             onProfileClick = { navController.navigate("profile") },
                              navController,
                              homeViewModel
                         )}
@@ -104,6 +106,11 @@ class MainActivity : ComponentActivity() {
                                 onProfileClick = {
                                     navController.navigate("profile")
                                 },
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable("chat") {
+                            ChatScreen(
                                 onBack = { navController.popBackStack() }
                             )
                         }

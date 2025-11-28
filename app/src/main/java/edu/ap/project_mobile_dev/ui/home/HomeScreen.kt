@@ -12,12 +12,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.ThumbUpAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -57,6 +59,7 @@ import edu.ap.project_mobile_dev.ui.map.OsmdroidMapView
 @Composable
 fun HomeScreen(
     onActivityClick: (Activity) -> Unit,
+    onChatClick: () -> Unit,
     onProfileClick: () -> Unit,
     navController: NavController,
     viewModel: HomeViewModel = viewModel(),
@@ -73,12 +76,28 @@ fun HomeScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = onChatClick) {
+                        Icon(
+                            imageVector = Icons.Default.Chat,
+                            contentDescription = "Menu",
+                            tint = Color.White
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onProfileClick) {
+                        Icon(
+                            imageVector = Icons.Default.AccountCircle,
+                            contentDescription = "Profiel",
+                            tint = Color.White,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                },
                 title = {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             "CityTrip",
                             fontSize = 24.sp,
@@ -92,20 +111,7 @@ fun HomeScreen(
                         )
                     }
                 },
-                navigationIcon = {
-                    Box(modifier = Modifier.width(48.dp))
-                },
-                actions = {
-                    IconButton(onClick = onProfileClick) {
-                        Icon(
-                            Icons.Default.AccountCircle,
-                            contentDescription = "Profiel",
-                            tint = Color.White,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = Color(0xFF1E2A3A)
                 )
             )
