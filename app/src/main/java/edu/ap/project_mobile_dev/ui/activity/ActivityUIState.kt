@@ -1,5 +1,6 @@
 package edu.ap.project_mobile_dev.ui.activity
 
+import android.graphics.Bitmap
 import edu.ap.project_mobile_dev.ui.model.ActivityDetail
 import edu.ap.project_mobile_dev.ui.model.ReviewDetail
 
@@ -17,5 +18,6 @@ data class ActivityUIState(
     val showReviewDialog: Boolean = false,
     val reviews: List<ReviewDetail> = emptyList(),
     val reviewList: List<String> = emptyList(),
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val photos: List<Bitmap> = emptyList()
 )

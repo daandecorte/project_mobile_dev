@@ -29,7 +29,6 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlin.math.round
 
-
 class ActivityViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(ActivityUIState())
     val uiState: StateFlow<ActivityUIState> = _uiState.asStateFlow()
@@ -286,6 +285,14 @@ class ActivityViewModel : ViewModel() {
                     bitmap = bitmap,
                     liked = liked
                 )
+
+                if(bitmap != null){
+                    _uiState.update { currentState ->
+                        val updatedPhotos = currentState.photos.toMutableList()
+                        updatedPhotos.add(bitmap)
+                        currentState.copy(photos = updatedPhotos)
+                    }
+                }
 
                 _uiState.update { currentState ->
                     val updatedReviews = currentState.reviews.toMutableList()
