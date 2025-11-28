@@ -598,12 +598,26 @@ fun ReviewItem(review: ReviewDetail, viewModel: ActivityViewModel) {
                     shape = CircleShape,
                     color = Color(0xFFFF6B35)
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            "+",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
+                    when{
+                        review.bitmapPicture != null -> {
+                            Image(
+                                bitmap = review.bitmapPicture.asImageBitmap(),
+                                contentDescription = "Profile picture",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(12.dp))
+                            )
+                        }
+                        else -> {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    "+",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                     }
                 }
 

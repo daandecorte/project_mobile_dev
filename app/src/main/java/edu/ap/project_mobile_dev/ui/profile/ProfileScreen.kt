@@ -1,7 +1,12 @@
 package edu.ap.project_mobile_dev.ui.profile
 
+import android.graphics.Bitmap
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,10 +29,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import edu.ap.project_mobile_dev.MainActivity
 import edu.ap.project_mobile_dev.ui.login.LoginViewModel
 import edu.ap.project_mobile_dev.ui.model.ActivityProfile
 import edu.ap.project_mobile_dev.ui.model.ReviewProfile
+import androidx.compose.ui.graphics.asImageBitmap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,6 +61,14 @@ fun ProfileScreen(
                     navController.navigate("activity/${event.id}")
                 }
             }
+        }
+    }
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.let {
+            viewModel.onPhotoSelected(it, context)
         }
     }
 
@@ -93,21 +108,16 @@ fun ProfileScreen(
                             .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Profile picture placeholder
-                        Surface(
-                            modifier = Modifier.size(100.dp),
-                            shape = CircleShape,
-                            color = Color(0xFFFF6B35)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    Icons.Default.Person,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(60.dp)
+                        PhotoSection(
+                            photoBitmap = uiState.photoBitmap,
+                            photoUri = uiState.photoUri,
+                            onPhotoClick = {
+                                photoPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                                 )
-                            }
-                        }
+                            },
+                            isPhotoLoading=uiState.isPhotoLoading
+                        )
 
                         Spacer(modifier = Modifier.height(16.dp))
 
@@ -550,6 +560,66 @@ fun EmptyStateCard(icon: androidx.compose.ui.graphics.vector.ImageVector, messag
                 fontSize = 16.sp,
                 modifier = Modifier.padding(top = 16.dp)
             )
+        }
+    }
+}
+
+@Composable
+private fun PhotoSection(
+    photoBitmap: Bitmap?,       // prefer this
+    photoUri: String?,         // fallback (Coil)
+    onPhotoClick: () -> Unit,
+    isPhotoLoading: Boolean
+) {
+    Surface(
+        modifier = Modifier
+            .size(100.dp)
+            .clickable(onClick = onPhotoClick),
+        shape = CircleShape,
+        color = Color(0xFFFF6B35),
+    ) {
+        when {
+            isPhotoLoading -> {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        strokeWidth = 3.dp
+                    )
+                }
+            }
+
+            photoBitmap != null -> {
+                Image(
+                    bitmap = photoBitmap.asImageBitmap(),
+                    contentDescription = "Profile picture",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(12.dp))
+                )
+            }
+
+            photoUri != null -> {
+                Image(
+                    painter = rememberAsyncImagePainter(photoUri),
+                    contentDescription = "Profile picture",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(12.dp))
+                )
+            }
+
+            else -> {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(60.dp)
+                    )
+                }
+            }
         }
     }
 }

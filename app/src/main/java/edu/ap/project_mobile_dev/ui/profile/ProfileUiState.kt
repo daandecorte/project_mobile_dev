@@ -1,5 +1,6 @@
 package edu.ap.project_mobile_dev.ui.profile
 
+import android.graphics.Bitmap
 import edu.ap.project_mobile_dev.ui.model.ActivityProfile
 import edu.ap.project_mobile_dev.ui.model.ReviewProfile
 
@@ -10,5 +11,10 @@ data class ProfileUiState(
     val favorites: List<ActivityProfile> = emptyList(),
     val favoritesList: List<String> = emptyList(),
     val selectedTab: Int = 0,
-    val isEditingUsername: Boolean = false
+    val isEditingUsername: Boolean = false,
+    val photoBase64: String = "",
+    val isPhotoLoading: Boolean = false,
+    val photoUri: String? = null,
+    val photoBitmap: Bitmap? = null,
+    val errorMessage: String? = null
     )

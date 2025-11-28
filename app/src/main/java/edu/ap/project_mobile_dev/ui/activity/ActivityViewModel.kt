@@ -148,17 +148,23 @@ class ActivityViewModel : ViewModel() {
             db.collection("reviews")
                 .add(review)
                 .addOnSuccessListener { documentRef ->
-                    _uiState.update { it.copy(reviews = _uiState.value.reviews+ ReviewDetail(
-                        docId = documentRef.id,
-                        username = currentUser?.displayName ?: "you",
-                        rating = _uiState.value.userRating,
-                        date = SimpleDateFormat("dd/MM/yyyy HH:mm").format(Timestamp.now().toDate()),
-                        description = _uiState.value.reviewText,
-                        likes = 0,
-                        bitmap = decodeBase64ToBitmap(_uiState.value.photoBase64),
-                        liked=false
-                    )) }
-                    val currentUser = FirebaseAuth.getInstance().currentUser;
+                    db.collection("users").document(currentUser?.uid ?: "")
+                        .get()
+                        .addOnSuccessListener { document ->
+                            val bitmapProfile = decodeBase64ToBitmap(document.getString("profilePicture") ?: "")
+
+                            _uiState.update { it.copy(reviews = _uiState.value.reviews+ ReviewDetail(
+                                docId = documentRef.id,
+                                username = document.getString("username") ?: "you",
+                                bitmapPicture = bitmapProfile,
+                                rating = _uiState.value.userRating,
+                                date = SimpleDateFormat("dd/MM/yyyy HH:mm").format(Timestamp.now().toDate()),
+                                description = _uiState.value.reviewText,
+                                likes = 0,
+                                bitmap = decodeBase64ToBitmap(_uiState.value.photoBase64),
+                                liked=false
+                            )) }
+                        }
 
                     db.collection("users")
                         .document(currentUser?.uid ?: "")
@@ -250,6 +256,7 @@ class ActivityViewModel : ViewModel() {
             for(review in reviews){
                 val user = db.collection("users").document(review.getString("userId") ?: "").get().await()
                 val username = user.getString("username") ?: ""
+                val bitmapProfile = decodeBase64ToBitmap(user.getString("profilePicture") ?: "")
 
                 val rating = (review.getLong("rating") ?: 0L).toInt()
                 val description = review.getString("description") ?: ""
@@ -270,6 +277,7 @@ class ActivityViewModel : ViewModel() {
 
                 val reviewDetail = ReviewDetail(
                     docId = review.id,
+                    bitmapPicture = bitmapProfile,
                     username = username,
                     rating = rating,
                     description = description,
