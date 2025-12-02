@@ -14,4 +14,6 @@ data class ActivityDetail (
     val description: String,
     val imageUrls: List<String> = emptyList(),
     val bitmap: Bitmap?,
+    val lat: String,
+    val lon: String,
 )

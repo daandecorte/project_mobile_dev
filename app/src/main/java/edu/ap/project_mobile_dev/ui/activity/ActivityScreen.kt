@@ -33,7 +33,11 @@ import androidx.compose.ui.window.Dialog
 import coil.compose.rememberAsyncImagePainter
 import edu.ap.project_mobile_dev.ui.model.ReviewDetail
 import androidx.compose.ui.unit.DpOffset
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ActivityScreen(
     activityId: String,
@@ -44,6 +48,12 @@ fun ActivityScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     val context = LocalContext.current
+    val permissionState = rememberPermissionState(android.Manifest.permission.ACCESS_FINE_LOCATION)
+    if (!permissionState.status.isGranted) {
+        permissionState.launchPermissionRequest()
+        viewModel.getCurrentLocation(context)
+    }
+    else viewModel.getCurrentLocation(context)
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
@@ -359,7 +369,7 @@ fun ActivityScreen(
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Text(
-                                    "2.3 km",
+                                    viewModel.getDistance()+ " Km",
                                     color = Color(0xFFB0BEC5),
                                     modifier = Modifier.padding(start = 4.dp)
                                 )

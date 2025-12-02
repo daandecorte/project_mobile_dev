@@ -3,6 +3,7 @@ package edu.ap.project_mobile_dev.ui.activity
 import android.graphics.Bitmap
 import edu.ap.project_mobile_dev.ui.model.ActivityDetail
 import edu.ap.project_mobile_dev.ui.model.ReviewDetail
+import org.osmdroid.util.GeoPoint
 
 data class ActivityUIState(
     val activity: ActivityDetail? = null,
@@ -20,5 +21,6 @@ data class ActivityUIState(
     val reviewList: List<String> = emptyList(),
     val saved: Boolean = false,
     val isReviewsLoading:Boolean = false,
-    val photos: List<Bitmap> = emptyList()
+    val photos: List<Bitmap> = emptyList(),
+    val currentLocation: GeoPoint = GeoPoint(0.0, 0.0),
 )

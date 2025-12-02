@@ -1,14 +1,18 @@
 package edu.ap.project_mobile_dev.ui.activity
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.location.Geocoder
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Base64
 import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.location.LocationServices
 import com.google.firebase.firestore.FirebaseFirestore
 import edu.ap.project_mobile_dev.ui.add.Category
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +31,8 @@ import com.google.firebase.firestore.FieldValue
 import edu.ap.project_mobile_dev.ui.model.ReviewDetail
 import edu.ap.project_mobile_dev.ui.model.UserInfo
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import org.osmdroid.util.GeoPoint
 import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlin.math.round
@@ -59,6 +65,8 @@ class ActivityViewModel : ViewModel() {
                         ratingM = (doc.getString("averageRating")?:"0").toInt(),
                         ratings = emptyList(),
                         bitmap = decodeBase64ToBitmap(doc.getString("imageUrl") ?: ""),
+                        lat = doc.getString("lat") ?: "",
+                        lon = doc.getString("lon") ?: "",
                     )
                     _uiState.update { it.copy(activity = activity, isLoading = false) }
 
@@ -340,5 +348,60 @@ class ActivityViewModel : ViewModel() {
                         }
                 }
         }
+    }
+    fun getCurrentLocation(context: android.content.Context) {
+        viewModelScope.launch {
+            try {
+                if (ContextCompat.checkSelfPermission(
+                        context,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    // Permission not granted, exit or show message
+                    println("Location permission not granted!")
+                    return@launch
+                }
+                val fused = LocationServices.getFusedLocationProviderClient(context)
+                val location = fused.lastLocation.await()
+                    ?: return@launch // location unavailable
+
+                val latitude = location.latitude
+                val longitude = location.longitude
+
+                // --- Reverse Geocode ---
+                val geocoder = Geocoder(context, Locale.getDefault())
+                val results = withContext(Dispatchers.IO) {
+                    geocoder.getFromLocation(latitude, longitude, 1)
+                }
+
+                _uiState.update {
+                    it.copy(
+                        currentLocation = GeoPoint(latitude, longitude)
+                    )
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+    fun getDistance(): String {
+        var earthRadiusKm = 6371;
+
+        var lat1 = uiState.value.currentLocation.latitude
+        var lat2 = (uiState.value.activity?.lat?.toDouble() ?: 0.0)
+        var dLat = degreesToRadians(lat1- lat2);
+        var dLon = degreesToRadians(uiState.value.currentLocation.longitude- (uiState.value.activity?.lon?.toDouble() ?: 0.0));
+
+        lat1 = degreesToRadians(lat1);
+        lat2 = degreesToRadians(lat2);
+
+        var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2);
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return "%.1f".format(Locale.GERMANY,  earthRadiusKm * c);
+    }
+    fun degreesToRadians(degrees: Double): Double {
+        return degrees * Math.PI / 180;
     }
 }
