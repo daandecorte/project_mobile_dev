@@ -1,5 +1,7 @@
 package edu.ap.project_mobile_dev.ui.activity
 
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -36,6 +38,8 @@ import androidx.compose.ui.unit.DpOffset
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import org.osmdroid.util.GeoPoint
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -377,7 +381,26 @@ fun ActivityScreen(
                         }
 
                         Button(
-                            onClick = { },
+                            onClick = {
+                                val start = uiState.currentLocation
+                                val end = GeoPoint(uiState.activity?.lat?.toDouble()?:0.0, uiState.activity?.lon?.toDouble()?:0.0)
+
+                                val uri = ("https://www.google.com/maps/dir/?api=1" +
+                                        "&origin=${start.latitude},${start.longitude}" +
+                                        "&destination=${end.latitude},${end.longitude}" +
+                                        "&travelmode=driving").toUri()
+
+                                val intent = Intent(Intent.ACTION_VIEW, uri).apply {
+                                    setPackage("com.google.android.apps.maps") // opens directly in Google Maps
+                                }
+
+                                try {
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    // fallback to browser if Google Maps app is not installed
+                                    context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                                }
+                            },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color.Transparent
                             ),
