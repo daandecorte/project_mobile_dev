@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import edu.ap.project_mobile_dev.ui.model.ReviewDetail
 import kotlinx.coroutines.tasks.await
@@ -240,35 +241,38 @@ class ActivityViewModel : ViewModel() {
     }
 
     suspend fun getReviews() {
-        _uiState.update { it.copy(reviews = emptyList()) }
+        _uiState.update { it.copy(reviews = emptyList(), isReviewsLoading = true) }
 
         val collection = db.collection("reviews")
 
         try{
             val reviews = collection.whereEqualTo("activityId", _uiState.value.activityId).get().await()
 
-            for(review in reviews){
-                val user = db.collection("users").document(review.getString("userId") ?: "").get().await()
-                val username = user.getString("username") ?: ""
-
+            val userIds = reviews.mapNotNull { it.getString("userId") }.toSet()
+            val userDocs = db.collection("users")
+                .whereIn(FieldPath.documentId(), userIds.toList())
+                .get()
+                .await()
+            val userMap = userDocs.associate { doc ->
+                doc.id to (doc.getString("username") ?: "")
+            }
+            val reviewList = reviews.map { review ->
+                val username = userMap[review.getString("userId")] ?: ""
                 val rating = (review.getLong("rating") ?: 0L).toInt()
                 val description = review.getString("description") ?: ""
 
                 val timestamp = review.getTimestamp("date") ?: com.google.firebase.Timestamp.now()
                 val date = timestamp.toDate()
-                val formattedDate = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(date)
+                val formattedDate = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                    .format(date)
 
                 val bitmap = decodeBase64ToBitmap(review.getString("imageUrl") ?: "")
-
                 val likes = review.get("likes") as? List<String> ?: emptyList()
 
                 val uid = FirebaseAuth.getInstance().currentUser?.uid
-                var liked = false
-                if(likes.contains(uid)){
-                    liked = true
-                }
+                val liked = likes.contains(uid)
 
-                val reviewDetail = ReviewDetail(
+                ReviewDetail(
                     docId = review.id,
                     username = username,
                     rating = rating,
@@ -278,13 +282,10 @@ class ActivityViewModel : ViewModel() {
                     bitmap = bitmap,
                     liked = liked
                 )
-
-                _uiState.update { currentState ->
-                    val updatedReviews = currentState.reviews.toMutableList()
-                    updatedReviews.add(reviewDetail)
-                    currentState.copy(reviews = updatedReviews)
-                }
             }
+
+            // Update UI once (not inside loop)
+            _uiState.update { it.copy(reviews = reviewList, isReviewsLoading = false) }
         } catch (e: Exception) {
             e.printStackTrace()
         }

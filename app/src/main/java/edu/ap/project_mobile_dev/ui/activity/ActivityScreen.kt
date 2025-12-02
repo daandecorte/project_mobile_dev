@@ -445,15 +445,24 @@ fun ActivityScreen(
                             Icon(Icons.Default.Add, "Voeg review toe", tint = Color.White)
                         }
                     }
+                    if(uiState.isReviewsLoading) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                        contentAlignment=Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                    else {
+                        uiState.reviews.forEachIndexed { index, review ->
+                            Spacer(modifier = Modifier.height(16.dp))
 
-                    uiState.reviews.forEachIndexed { index, review ->
-                        Spacer(modifier = Modifier.height(16.dp))
+                            ReviewItem(review, viewModel)
 
-                        ReviewItem(review, viewModel)
-
-                        if (index < uiState.reviews.lastIndex) {
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Divider(color = Color(0xFF2E3A47), thickness = 1.dp)
+                            if (index < uiState.reviews.lastIndex) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Divider(color = Color(0xFF2E3A47), thickness = 1.dp)
+                            }
                         }
                     }
                 }

@@ -356,11 +356,23 @@ fun HomeScreen(
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            items(uiState.filteredActivities) { activity ->
-                                ActivityCard(
-                                    activity = activity,
-                                    onClick = { onActivityClick(activity) }
-                                )
+                            if(uiState.isLoading) {
+                                item {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment=Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
+                                }
+                            }
+                            else {
+                                items(uiState.filteredActivities) { activity ->
+                                    ActivityCard(
+                                        activity = activity,
+                                        onClick = { onActivityClick(activity) }
+                                    )
+                                }
                             }
                         }
                     }

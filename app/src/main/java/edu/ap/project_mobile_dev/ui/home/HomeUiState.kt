@@ -12,5 +12,6 @@ data class HomeUiState(
     val filteredActivities: List<Activity> = emptyList(),
     val isRefreshing: Boolean=false,
     val currentLocation: GeoPoint = GeoPoint(0.0, 0.0),
-    val sortBy: SortBy = SortBy.NONE
+    val sortBy: SortBy = SortBy.NONE,
+    val isLoading: Boolean = false,
 )

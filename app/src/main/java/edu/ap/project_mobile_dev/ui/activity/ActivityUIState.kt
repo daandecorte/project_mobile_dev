@@ -17,5 +17,6 @@ data class ActivityUIState(
     val showReviewDialog: Boolean = false,
     val reviews: List<ReviewDetail> = emptyList(),
     val reviewList: List<String> = emptyList(),
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    val isReviewsLoading:Boolean = false
 )

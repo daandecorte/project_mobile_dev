@@ -33,6 +33,7 @@ class HomeViewModel : ViewModel() {
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
     private val db = FirebaseFirestore.getInstance()
     init {
+        _uiState.update{it.copy(isLoading = true)}
         loadActivities()
     }
     fun getCurrentLocation(context: android.content.Context) {
@@ -107,7 +108,8 @@ class HomeViewModel : ViewModel() {
                     it.copy(
                         activities = firebaseActivities,
                         filteredActivities = firebaseActivities,
-                        isRefreshing = false
+                        isRefreshing = false,
+                        isLoading = false
                     )
                 }
             }
@@ -166,8 +168,8 @@ class HomeViewModel : ViewModel() {
                         )
                     }
                 }
-                SortBy.RATINGH -> filtered
-                SortBy.RATINGL -> filtered
+                SortBy.RATINGH -> filtered.sortedByDescending { it.averageRating }
+                SortBy.RATINGL -> filtered.sortedBy { it.averageRating }
                 SortBy.ALPHABETICAL -> filtered.sortedBy { it.title.lowercase() }
             }
             currentState.copy(filteredActivities = filtered)

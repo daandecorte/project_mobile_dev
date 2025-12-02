@@ -260,16 +260,17 @@ fun ProfileScreen(
 
         // Content based on selected tab
         if (selectedTab == 0) {
-            // Favorites
-            items(uiState.favorites) { activity ->
-                FavoriteActivityCard(
-                    activity = activity,
-                    onRemove = { viewModel.removeFavorite(activity.activityId) },
-                    onClick = { viewModel.goToActivity(it) }
-                )
+            if(uiState.isFavLoading) {
+                item {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment=Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
             }
-
-            if (uiState.favorites.isEmpty()) {
+            else if (uiState.favorites.isEmpty()) {
                 item {
                     EmptyStateCard(
                         icon = Icons.Default.FavoriteBorder,
@@ -277,12 +278,27 @@ fun ProfileScreen(
                     )
                 }
             }
-        } else {
-            items(uiState.reviews) { review ->
-                UserReviewCard(review = review)
+            else {
+                items(uiState.favorites) { activity ->
+                    FavoriteActivityCard(
+                        activity = activity,
+                        onRemove = { viewModel.removeFavorite(activity.activityId) },
+                        onClick = { viewModel.goToActivity(it) }
+                    )
+                }
             }
-
-            if (uiState.reviews.isEmpty()) {
+        } else {
+            if(uiState.isReviewsLoaing) {
+                item {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment=Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+            }
+            else if (uiState.reviews.isEmpty()) {
                 item {
                     EmptyStateCard(
                         icon = Icons.Default.StarBorder,
@@ -290,8 +306,12 @@ fun ProfileScreen(
                     )
                 }
             }
+            else {
+                items(uiState.reviews) { review ->
+                    UserReviewCard(review = review)
+                }
+            }
         }
-
         // Logout button at bottom
         item {
             Surface(

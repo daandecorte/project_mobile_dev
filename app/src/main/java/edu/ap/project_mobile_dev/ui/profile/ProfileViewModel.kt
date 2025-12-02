@@ -7,11 +7,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import edu.ap.project_mobile_dev.ui.add.Category
 import edu.ap.project_mobile_dev.ui.model.ActivityProfile
 import edu.ap.project_mobile_dev.ui.model.ReviewProfile
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -64,31 +68,50 @@ class ProfileViewModel: ViewModel() {
         _uiState.value = _uiState.value.copy(username = username)
     }
 
-    suspend fun getReviews() {
+    suspend fun getReviews() = coroutineScope {
+        _uiState.update { it.copy(reviews = emptyList(), isReviewsLoaing = true) }
+
+        val reviewIds = _uiState.value.reviewList
         val collection = db.collection("reviews")
 
-        _uiState.update { it.copy(reviews = emptyList()) }
+        try {
+            val reviewDocs = reviewIds.map { id ->
+                async {
+                    collection.document(id).get().await()
+                }
+            }.awaitAll()
 
-        for (id in _uiState.value.reviewList) {
-            try {
-                val doc = collection.document(id).get().await()
-                if (!doc.exists()) continue
+            val validReviews = reviewDocs.filter { it.exists() }
 
-                val activityId = doc.getString("activityId") ?: ""
+            val activityIds = validReviews
+                .mapNotNull { it.getString("activityId") }
+                .toSet()
 
-                val activityDoc = db.collection("activities").document(activityId).get().await()
-                val activityTitle = if (activityDoc.exists()) activityDoc.getString("title") ?: "" else ""
+            val activityMap = if (activityIds.isNotEmpty()) {
+                db.collection("activities")
+                    .whereIn(FieldPath.documentId(), activityIds.toList())
+                    .get()
+                    .await()
+                    .associate { doc ->
+                        doc.id to (doc.getString("title") ?: "")
+                    }
+            } else emptyMap()
+
+            val reviewList = validReviews.map { doc ->
+
+                val activityTitle = activityMap[doc.getString("activityId")] ?: ""
 
                 val rating = (doc.getLong("rating") ?: 0L).toInt()
                 val description = doc.getString("description") ?: ""
 
                 val timestamp = doc.getTimestamp("date") ?: com.google.firebase.Timestamp.now()
                 val date = timestamp.toDate()
-                val formattedDate = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(date)
+                val formattedDate = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                    .format(date)
 
                 val bitmap = decodeBase64ToBitmap(doc.getString("imageUrl") ?: "")
 
-                val reviewProfile = ReviewProfile(
+                ReviewProfile(
                     activityId = activityTitle,
                     rating = rating,
                     description = description,
@@ -96,44 +119,43 @@ class ProfileViewModel: ViewModel() {
                     bitmap = bitmap,
                     likes = 0
                 )
-
-                // Update uiState safely
-                _uiState.update { currentState ->
-                    val updatedReviews = currentState.reviews.toMutableList()
-                    updatedReviews.add(reviewProfile)
-                    currentState.copy(reviews = updatedReviews)
-                }
-
-            } catch (e: Exception) {
-                e.printStackTrace()
             }
+
+            _uiState.update { it.copy(reviews = reviewList, isReviewsLoaing = false) }
+
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
-    suspend fun getFavorites(){
+    suspend fun getFavorites() = coroutineScope{
         val collection = db.collection("activities")
-        _uiState.update { it.copy(favorites = emptyList()) }
+        _uiState.update { it.copy(favorites = emptyList(), isFavLoading = true) }
+        val favouriteIds = _uiState.value.favoritesList
+        try {
+            val favourites = favouriteIds.map{id->async {
+                collection.document(id).get().await()
+            }}.awaitAll()
+            val validFav = favourites.filter { it.exists() }
+            val favoritesList = validFav
+                .map { doc ->
+                    val location = (doc.getString("street") ?: "") +
+                            " • " +
+                            (doc.getString("city") ?: "")
 
-        for (fav in _uiState.value.favoritesList){
-            collection.document(fav)
-                .get()
-                .addOnSuccessListener { document ->
-                    val location = document.getString("street") + " • " + document.getString("city")
-
-                    val activity = ActivityProfile (
-                        activityId = fav,
-                        name = document.getString("title") ?: "",
+                    ActivityProfile(
+                        activityId = doc.id,
+                        name = doc.getString("title") ?: "",
                         location = location,
-                        category = Category.valueOf(document.getString("category") ?: "OTHER"),
+                        category = Category.valueOf(doc.getString("category") ?: "OTHER")
                     )
-
-                    _uiState.update { currentState ->
-                        val updatedFavorites = currentState.favorites.toMutableList()
-                        updatedFavorites.add(activity)
-                        currentState.copy(favorites = updatedFavorites)
-                    }
                 }
+            _uiState.update { it.copy(favorites = favoritesList, isFavLoading = false) }
         }
+        catch (e :Exception) {
+            e.printStackTrace()
+        }
+
     }
 
     private val _events = MutableSharedFlow<ProfileEvent>()

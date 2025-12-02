@@ -10,5 +10,7 @@ data class ProfileUiState(
     val favorites: List<ActivityProfile> = emptyList(),
     val favoritesList: List<String> = emptyList(),
     val selectedTab: Int = 0,
-    val isEditingUsername: Boolean = false
+    val isEditingUsername: Boolean = false,
+    val isFavLoading: Boolean = false,
+    val isReviewsLoaing:Boolean = false
     )
