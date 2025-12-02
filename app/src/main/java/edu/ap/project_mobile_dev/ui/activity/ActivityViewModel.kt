@@ -258,7 +258,7 @@ class ActivityViewModel : ViewModel() {
         _uiState.update { it.copy(reviews = emptyList(), isReviewsLoading = true) }
 
         val collection = db.collection("reviews")
-
+        val photos = mutableListOf<Bitmap>()
         try{
             val reviews = collection.whereEqualTo("activityId", _uiState.value.activityId).get().await()
 
@@ -288,6 +288,9 @@ class ActivityViewModel : ViewModel() {
                     .format(date)
 
                 val bitmap = decodeBase64ToBitmap(review.getString("imageUrl") ?: "")
+                if(bitmap!=null) {
+                    photos.add(bitmap)
+                }
                 val likes = review.get("likes") as? List<String> ?: emptyList()
 
                 val uid = FirebaseAuth.getInstance().currentUser?.uid
@@ -307,7 +310,7 @@ class ActivityViewModel : ViewModel() {
             }
 
             // Update UI once (not inside loop)
-            _uiState.update { it.copy(reviews = reviewList, isReviewsLoading = false) }
+            _uiState.update { it.copy(reviews = reviewList, isReviewsLoading = false, photos = photos) }
         } catch (e: Exception) {
             e.printStackTrace()
         }
