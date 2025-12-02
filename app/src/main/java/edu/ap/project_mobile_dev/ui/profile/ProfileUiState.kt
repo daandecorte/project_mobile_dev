@@ -1,5 +1,6 @@
 package edu.ap.project_mobile_dev.ui.profile
 
+import android.graphics.Bitmap
 import edu.ap.project_mobile_dev.ui.model.ActivityProfile
 import edu.ap.project_mobile_dev.ui.model.ReviewProfile
 
@@ -13,4 +14,9 @@ data class ProfileUiState(
     val isEditingUsername: Boolean = false,
     val isFavLoading: Boolean = false,
     val isReviewsLoaing:Boolean = false
+    val photoBase64: String = "",
+    val isPhotoLoading: Boolean = false,
+    val photoUri: String? = null,
+    val photoBitmap: Bitmap? = null,
+    val errorMessage: String? = null
     )

@@ -1,8 +1,12 @@
 package edu.ap.project_mobile_dev.ui.profile
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
+import android.provider.MediaStore
 import android.util.Base64
+import androidx.core.graphics.scale
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
@@ -16,6 +20,7 @@ import edu.ap.project_mobile_dev.ui.model.ReviewProfile
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +30,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlin.String
 import kotlinx.coroutines.flow.asSharedFlow
+import java.io.ByteArrayOutputStream
 
 sealed class ProfileEvent {
     data class NavigateToActivity(val id: String) : ProfileEvent()
@@ -47,7 +53,16 @@ class ProfileViewModel: ViewModel() {
                     val favorites = document.get("favorites") as? List<String> ?: emptyList()
                     val reviewList = document.get("reviews") as? List<String> ?: emptyList()
 
-                    _uiState.update { it.copy(username = username, favoritesList = favorites, reviewList = reviewList) }
+                    val profileBase64 = document.getString("profilePicture") ?: ""
+                    val profileBitmap = profileBase64?.let { decodeBase64ToBitmap(it) }
+
+                    _uiState.update { it.copy(
+                        username = username,
+                        favoritesList = favorites,
+                        reviewList = reviewList,
+                        photoBase64 = profileBase64,
+                        photoBitmap = profileBitmap
+                    ) }
 
                     viewModelScope.launch {
                         getFavorites()
@@ -57,8 +72,8 @@ class ProfileViewModel: ViewModel() {
                     // Throw something
                 }
             }.addOnFailureListener { exception -> println("Error fetching user: $exception") }
-
     }
+
 
     fun changeDBUsername(){
         db.collection("users").document(currentUser?.uid ?: "").update("username", _uiState.value.username)
@@ -179,6 +194,53 @@ class ProfileViewModel: ViewModel() {
                     currentState.copy(favorites = updatedFavorites)
                 }
             }
+    }
+
+    val MAX_FIRESTORE_IMAGE_SIZE = 1048487
+
+    fun onPhotoSelected(uri: Uri, context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _uiState.update { it.copy(isPhotoLoading = true, errorMessage = null) }
+            val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+
+            var quality = 80
+            var base64: String
+            do {
+                base64 = bitmapToBase64(bitmap, quality = quality)
+                quality -= 10
+            } while (base64.length > MAX_FIRESTORE_IMAGE_SIZE && quality > 5)
+
+            if (base64.length > MAX_FIRESTORE_IMAGE_SIZE) {
+                _uiState.update { current ->
+                    current.copy(errorMessage = "Afbeelding is te groot ${base64.length}", isPhotoLoading = false)
+                }
+                return@launch
+            }
+
+            _uiState.update { current ->
+                current.copy(
+                    photoUri = uri.toString(),
+                    photoBase64 = base64,
+                    photoBitmap = bitmap,
+                    isPhotoLoading = false
+                )
+            }
+
+            db.collection("users")
+                .document(currentUser?.uid ?: "")
+                .update("profilePicture", base64)
+                .addOnFailureListener { e ->
+                    _uiState.update { it.copy(errorMessage = "Failed to upload picture: ${e.message}") }
+                }
+        }
+    }
+
+
+    fun bitmapToBase64(bitmap: Bitmap, quality: Int =80): String {
+        val outputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream) // compress to reduce size
+        val byteArray = outputStream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.DEFAULT)
     }
 
     fun decodeBase64ToBitmap(base64String: String): Bitmap? {

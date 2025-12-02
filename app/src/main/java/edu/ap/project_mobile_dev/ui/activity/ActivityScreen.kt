@@ -25,6 +25,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
@@ -310,141 +312,118 @@ fun ActivityScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Foto's (8)")
+                            Text("Foto's (" + uiState.photos.count() + ")")
                         }
                     }
                 }
             }
         }
 
-        // Location Card
-        item {
-            Surface(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = Color(0xFF1E2A3A)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+        if(uiState.selectedTab == 0)
+        {
+            item {
+                Surface(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFF1E2A3A)
                 ) {
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.LocationOn,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                activity.city,
-                                color = Color.White,
-                                modifier = Modifier.padding(start = 4.dp)
-                            )
-                        }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(top = 4.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.Navigation,
-                                contentDescription = null,
-                                tint = Color(0xFFB0BEC5),
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                "2.3 km",
-                                color = Color(0xFFB0BEC5),
-                                modifier = Modifier.padding(start = 4.dp)
-                            )
-                        }
-                    }
-
-                    Button(
-                        onClick = { },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Transparent
-                        ),
-                        contentPadding = PaddingValues(0.dp),
-                        shape = RoundedCornerShape(8.dp)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .background(
-                                    brush = Brush.horizontalGradient(
-                                        colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
-                                    ),
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
+                        Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
-                                    Icons.Default.Directions,
+                                    Icons.Default.LocationOn,
                                     contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
-                                    tint = Color.White
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
                                 )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Route", color = Color.White)
+                                Text(
+                                    activity.city,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(start = 4.dp)
+                                )
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(top = 4.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Navigation,
+                                    contentDescription = null,
+                                    tint = Color(0xFFB0BEC5),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    "2.3 km",
+                                    color = Color(0xFFB0BEC5),
+                                    modifier = Modifier.padding(start = 4.dp)
+                                )
+                            }
+                        }
+
+                        Button(
+                            onClick = { },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent
+                            ),
+                            contentPadding = PaddingValues(0.dp),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        brush = Brush.horizontalGradient(
+                                            colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
+                                        ),
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Default.Directions,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp),
+                                        tint = Color.White
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Route", color = Color.White)
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        // About Section
-        item {
-            Surface(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = Color(0xFF1E2A3A)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        "Over deze locatie",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Text(
-                        activity.description,
-                        color = Color(0xFFB0BEC5),
-                        modifier = Modifier.padding(top = 8.dp),
-                        lineHeight = 20.sp
-                    )
-                }
-            }
-        }
-
-        // Reviews Section
-        item {
-            Surface(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = Color(0xFF1E2A3A)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "Reviews (${uiState.reviews.size})",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                        IconButton(onClick = { viewModel.showReviewDialog(true) }) {
-                            Icon(Icons.Default.Add, "Voeg review toe", tint = Color.White)
+            // About Section
+            item {
+                Surface(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFF1E2A3A)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Reviews (${uiState.reviews.size})",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            IconButton(onClick = { viewModel.showReviewDialog(true) }) {
+                                Icon(Icons.Default.Add, "Voeg review toe", tint = Color.White)
+                            }
                         }
-                    }
                     if(uiState.isReviewsLoading) {
                         Box(
                             modifier = Modifier.fillMaxSize(),
@@ -464,11 +443,49 @@ fun ActivityScreen(
                                 Divider(color = Color(0xFF2E3A47), thickness = 1.dp)
                             }
                         }
+                }
+            }
+
+            // Reviews Section
+
+
+                    }
+                }
+            }
+        } else {
+            item {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    uiState.photos.chunked(2).forEach { row ->
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            row.forEach { ph ->
+                                Image(
+                                    bitmap = ph.asImageBitmap(),
+                                    contentDescription = "Photo",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .aspectRatio(1f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                )
+                            }
+
+                            // If odd number → fill space for 2nd column
+                            if (row.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
                     }
                 }
             }
         }
+
+
     }
+
     // Write Review Section
     if (uiState.showReviewDialog) {
         Dialog(
@@ -607,12 +624,26 @@ fun ReviewItem(review: ReviewDetail, viewModel: ActivityViewModel) {
                     shape = CircleShape,
                     color = Color(0xFFFF6B35)
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            "+",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
+                    when{
+                        review.bitmapPicture != null -> {
+                            Image(
+                                bitmap = review.bitmapPicture.asImageBitmap(),
+                                contentDescription = "Profile picture",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(12.dp))
+                            )
+                        }
+                        else -> {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    "+",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                     }
                 }
 
