@@ -13,7 +13,7 @@ data class ProfileUiState(
     val selectedTab: Int = 0,
     val isEditingUsername: Boolean = false,
     val isFavLoading: Boolean = false,
-    val isReviewsLoaing:Boolean = false
+    val isReviewsLoaing:Boolean = false,
     val photoBase64: String = "",
     val isPhotoLoading: Boolean = false,
     val photoUri: String? = null,

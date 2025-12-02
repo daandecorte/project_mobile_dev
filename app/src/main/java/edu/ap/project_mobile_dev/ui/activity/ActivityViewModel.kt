@@ -25,6 +25,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import edu.ap.project_mobile_dev.ui.model.ReviewDetail
+import edu.ap.project_mobile_dev.ui.model.UserInfo
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -259,10 +260,17 @@ class ActivityViewModel : ViewModel() {
                 .get()
                 .await()
             val userMap = userDocs.associate { doc ->
-                doc.id to (doc.getString("username") ?: "")
+                doc.id to UserInfo(
+                    username = doc.getString("username") ?: "",
+                    profilePicture = doc.getString("profilePicture") ?: ""
+                )
             }
             val reviewList = reviews.map { review ->
-                val username = userMap[review.getString("userId")] ?: ""
+                val userId = review.getString("userId") ?: ""
+                val userInfo = userMap[userId]
+
+                val username = userInfo?.username ?: ""
+                val bitmapProfile = decodeBase64ToBitmap(userInfo?.profilePicture ?: "")
                 val rating = (review.getLong("rating") ?: 0L).toInt()
                 val description = review.getString("description") ?: ""
 

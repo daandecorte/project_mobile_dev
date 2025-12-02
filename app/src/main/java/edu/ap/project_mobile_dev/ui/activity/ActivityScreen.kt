@@ -424,35 +424,31 @@ fun ActivityScreen(
                                 Icon(Icons.Default.Add, "Voeg review toe", tint = Color.White)
                             }
                         }
-                    if(uiState.isReviewsLoading) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                        contentAlignment=Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
-                    }
-                    else {
-                        uiState.reviews.forEachIndexed { index, review ->
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            ReviewItem(review, viewModel)
-
-                            if (index < uiState.reviews.lastIndex) {
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Divider(color = Color(0xFF2E3A47), thickness = 1.dp)
+                        if(uiState.isReviewsLoading) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                            contentAlignment=Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
                             }
                         }
-                }
-            }
+                        else {
+                            uiState.reviews.forEachIndexed { index, review ->
+                                Spacer(modifier = Modifier.height(16.dp))
 
-            // Reviews Section
+                                ReviewItem(review, viewModel)
 
-
+                                if (index < uiState.reviews.lastIndex) {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Divider(color = Color(0xFF2E3A47), thickness = 1.dp)
+                                }
+                            }
+                        }
                     }
                 }
             }
-        } else {
+        }
+        else {
             item {
                 Column(modifier = Modifier.padding(16.dp)) {
                     uiState.photos.chunked(2).forEach { row ->
@@ -472,7 +468,6 @@ fun ActivityScreen(
                                 )
                             }
 
-                            // If odd number → fill space for 2nd column
                             if (row.size == 1) {
                                 Spacer(modifier = Modifier.weight(1f))
                             }
@@ -482,11 +477,7 @@ fun ActivityScreen(
                 }
             }
         }
-
-
     }
-
-    // Write Review Section
     if (uiState.showReviewDialog) {
         Dialog(
             onDismissRequest = { viewModel.showReviewDialog(false) }
