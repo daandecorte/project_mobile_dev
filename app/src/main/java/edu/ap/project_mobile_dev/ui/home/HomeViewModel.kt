@@ -11,6 +11,8 @@ import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.LocationServices
 import com.google.api.Context
 import com.google.firebase.firestore.FirebaseFirestore
+import dagger.hilt.android.lifecycle.HiltViewModel
+import edu.ap.project_mobile_dev.repository.ActivityRepository
 import edu.ap.project_mobile_dev.ui.add.Category
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,17 +26,33 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import org.osmdroid.util.GeoPoint
 import java.util.Locale
+import javax.inject.Inject
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
-class HomeViewModel : ViewModel() {
+@HiltViewModel
+class HomeViewModel @Inject constructor(private val repository: ActivityRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
     private val db = FirebaseFirestore.getInstance()
     init {
-        _uiState.update{it.copy(isLoading = true)}
-        loadActivities()
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+
+            // Collect activities from Room continuously
+            repository.getActivities().collect { activities ->
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        activities = activities,
+                        filteredActivities = activities,
+                        isLoading = false,
+                        isRefreshing = false
+                    )
+                }
+            }
+        }
+        refreshActivities()
     }
     fun getCurrentLocation(context: android.content.Context) {
         viewModelScope.launch {
@@ -73,50 +91,30 @@ class HomeViewModel : ViewModel() {
         }
     }
     fun refreshActivities() {
-        _uiState.update {
-            state -> state.copy(isRefreshing = true)
-        }
+        _uiState.value = _uiState.value.copy(isRefreshing = true)
 
         viewModelScope.launch {
-            loadActivities()
+            try {
+                repository.refreshActivities()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiState.value = _uiState.value.copy(isRefreshing = false)
+            }
         }
     }
-    fun loadActivities() {
-        db.collection("activities")
-            .get()
-            .addOnSuccessListener { snapshot ->
-                val firebaseActivities = snapshot.documents.mapNotNull { doc ->
-                    try {
-                        Activity(
-                            documentId = doc.id,
-                            title = doc.getString("title") ?: "",
-                            description = doc.getString("description") ?: "",
-                            category = Category.valueOf(doc.getString("category") ?: "OTHER"),
-                            location = doc.getString("location") ?: "",
-                            city = doc.getString("city") ?: "",
-                            lat=doc.getString("lat") ?: "",
-                            lon=doc.getString("lon") ?: "",
-                            street = doc.getString("street")?:"",
-                            averageRating = (doc.getString("averageRating")?.toDoubleOrNull() ?: 0.0).roundToInt()
-                        )
-                    } catch (e: Exception) {
-                        null
-                    }
-                }
-
-                _uiState.update {
-                    it.copy(
-                        activities = firebaseActivities,
-                        filteredActivities = firebaseActivities,
-                        isRefreshing = false,
-                        isLoading = false
-                    )
-                }
-            }
-            .addOnFailureListener { e ->
-                Log.e("Firestore", "Failed to load activities", e)
-            }
-    }
+//    private fun loadActivities() {
+//        _uiState.value = _uiState.value.copy(isLoading = true)
+//        viewModelScope.launch {
+//            repository.getActivities().collect { activities ->
+//                _uiState.value = _uiState.value.copy(
+//                    activities = activities,
+//                    filteredActivities=activities,
+//                    isLoading = false,
+//                    isRefreshing = false
+//                )
+//            }
+//        }
+//    }
     fun updateSearchQuery(query: String) {
         _uiState.update {
             it.copy(searchQuery = query)

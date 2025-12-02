@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ThumbUpAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,11 +69,13 @@ fun HomeScreen(
     var sortByExpanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val permissionState = rememberPermissionState(android.Manifest.permission.ACCESS_FINE_LOCATION)
-    if (!permissionState.status.isGranted) {
-        permissionState.launchPermissionRequest()
-        viewModel.getCurrentLocation(context)
+    LaunchedEffect(permissionState.status) {
+        if (!permissionState.status.isGranted) {
+            permissionState.launchPermissionRequest()
+            viewModel.getCurrentLocation(context)
+        }
+        else viewModel.getCurrentLocation(context)
     }
-    else viewModel.getCurrentLocation(context)
 
     Scaffold(
         topBar = {
