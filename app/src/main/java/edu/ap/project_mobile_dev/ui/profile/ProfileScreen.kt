@@ -8,6 +8,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -88,17 +89,40 @@ fun ProfileScreen(
                 color = Color(0xFF1E2A3A)
             ) {
                 Column {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier
-                            .padding(top = 30.dp, start = 8.dp)
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Terug",
-                            tint = Color.White,
-                            modifier = Modifier.size(28.dp)
-                        )
+
+                        IconButton(
+                            onClick = onBack,
+                            modifier = Modifier
+                                .padding(top = 30.dp, start = 8.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.ArrowBack,
+                                contentDescription = "Terug",
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                        IconButton(
+                            onClick = {
+                                viewModelLogin.logout(context as? MainActivity)
+                                navController.navigate("login") {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            },
+                            modifier = Modifier
+                                .padding(top = 30.dp, start = 8.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Logout,
+                                contentDescription = "Terug",
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
                     }
 
                     // Profile section
@@ -322,53 +346,6 @@ fun ProfileScreen(
                 }
             }
         }
-        // Logout button at bottom
-        item {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = Color(0xFF1E2A3A)
-            ) {
-                Button(
-                    onClick = {
-                        viewModelLogin.logout(context as? MainActivity)
-                        navController.navigate("login") {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
-                                ),
-                                shape = RoundedCornerShape(12.dp)
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Uitloggen",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                }
-            }
-        }
-
         // Bottom spacing
         item {
             Spacer(modifier = Modifier.height(16.dp))
