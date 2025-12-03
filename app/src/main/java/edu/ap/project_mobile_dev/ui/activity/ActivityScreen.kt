@@ -40,6 +40,7 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import org.osmdroid.util.GeoPoint
 import androidx.core.net.toUri
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -47,7 +48,7 @@ fun ActivityScreen(
     activityId: String,
     onProfileClick: () -> Unit,
     onBack: () -> Unit,
-    viewModel: ActivityViewModel = viewModel()
+    viewModel: ActivityViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -518,6 +519,9 @@ fun ActivityScreen(
                     }
                 }
             }
+        }
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
     if (uiState.showReviewDialog) {

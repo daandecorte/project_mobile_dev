@@ -14,9 +14,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import dagger.hilt.android.lifecycle.HiltViewModel
+import edu.ap.project_mobile_dev.repository.ReviewRepository
 import edu.ap.project_mobile_dev.ui.add.Category
 import edu.ap.project_mobile_dev.ui.model.ActivityProfile
 import edu.ap.project_mobile_dev.ui.model.ReviewProfile
+import edu.ap.project_mobile_dev.ui.model.UserInfo
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -31,12 +34,15 @@ import java.util.Locale
 import kotlin.String
 import kotlinx.coroutines.flow.asSharedFlow
 import java.io.ByteArrayOutputStream
+import javax.inject.Inject
 
 sealed class ProfileEvent {
     data class NavigateToActivity(val id: String) : ProfileEvent()
 }
-
-class ProfileViewModel: ViewModel() {
+@HiltViewModel
+class ProfileViewModel @Inject constructor(
+    private val reviewRepository: ReviewRepository
+): ViewModel() {
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState
 
@@ -90,57 +96,89 @@ class ProfileViewModel: ViewModel() {
         val collection = db.collection("reviews")
 
         try {
-            val reviewDocs = reviewIds.map { id ->
-                async {
-                    collection.document(id).get().await()
-                }
-            }.awaitAll()
+            val uid = currentUser?.uid ?: ""
+            reviewRepository.getReviewsByUser(uid).collect { reviews ->
+                val activityIds = reviews.map { it.activityId }.toSet()
 
-            val validReviews = reviewDocs.filter { it.exists() }
-
-            val activityIds = validReviews
-                .mapNotNull { it.getString("activityId") }
-                .toSet()
-
-            val activityMap = if (activityIds.isNotEmpty()) {
-                db.collection("activities")
-                    .whereIn(FieldPath.documentId(), activityIds.toList())
-                    .get()
-                    .await()
-                    .associate { doc ->
+                val activityMap = if (activityIds.isNotEmpty()) {
+                    val activityDocs = db.collection("activities")
+                        .whereIn(FieldPath.documentId(), activityIds.toList())
+                        .get()
+                        .await()
+                    activityDocs.associate { doc ->
                         doc.id to (doc.getString("title") ?: "")
                     }
-            } else emptyMap()
+                } else {
+                    emptyMap()
+                }
 
-            val reviewList = validReviews.map { doc ->
-
-                val activityTitle = activityMap[doc.getString("activityId")] ?: ""
-
-                val rating = (doc.getLong("rating") ?: 0L).toInt()
-                val description = doc.getString("description") ?: ""
-
-                val timestamp = doc.getTimestamp("date") ?: com.google.firebase.Timestamp.now()
-                val date = timestamp.toDate()
-                val formattedDate = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-                    .format(date)
-
-                val bitmap = decodeBase64ToBitmap(doc.getString("imageUrl") ?: "")
-
-                ReviewProfile(
-                    activityId = activityTitle,
-                    rating = rating,
-                    description = description,
-                    date = formattedDate,
-                    bitmap = bitmap,
-                    likes = 0
-                )
+                val profileReviews = reviews.map{ review ->
+                    val date=review.date.toDate()
+                    val formattedDate = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(date)
+                    ReviewProfile(
+                        activityId = activityMap[review.activityId] ?:"",
+                        rating = review.rating,
+                        description = review.description,
+                        date = formattedDate,
+                        bitmap = decodeBase64ToBitmap(review.imageUrl),
+                        likes = review.likes.size
+                    )
+                }
+                _uiState.update { it.copy(reviews = profileReviews, isReviewsLoaing = false) }
             }
+            reviewRepository.refreshReviews()
+//            val reviewDocs = reviewIds.map { id ->
+//                async {
+//                    collection.document(id).get().await()
+//                }
+//            }.awaitAll()
+//
+//            val validReviews = reviewDocs.filter { it.exists() }
+//
+//            val activityIds = validReviews
+//                .mapNotNull { it.getString("activityId") }
+//                .toSet()
+//
+//            val activityMap = if (activityIds.isNotEmpty()) {
+//                db.collection("activities")
+//                    .whereIn(FieldPath.documentId(), activityIds.toList())
+//                    .get()
+//                    .await()
+//                    .associate { doc ->
+//                        doc.id to (doc.getString("title") ?: "")
+//                    }
+//            } else emptyMap()
+//
+//            val reviewList = validReviews.map { doc ->
+//
+//                val activityTitle = activityMap[doc.getString("activityId")] ?: ""
+//
+//                val rating = (doc.getLong("rating") ?: 0L).toInt()
+//                val description = doc.getString("description") ?: ""
+//
+//                val timestamp = doc.getTimestamp("date") ?: com.google.firebase.Timestamp.now()
+//                val date = timestamp.toDate()
+//                val formattedDate = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+//                    .format(date)
+//
+//                val bitmap = decodeBase64ToBitmap(doc.getString("imageUrl") ?: "")
+//
+//                ReviewProfile(
+//                    activityId = activityTitle,
+//                    rating = rating,
+//                    description = description,
+//                    date = formattedDate,
+//                    bitmap = bitmap,
+//                    likes = 0
+//                )
+//            }
 
-            _uiState.update { it.copy(reviews = reviewList, isReviewsLoaing = false) }
+            //_uiState.update { it.copy(reviews = reviewList, isReviewsLoaing = false) }
 
         } catch (e: Exception) {
             e.printStackTrace()
         }
+
     }
 
     suspend fun getFavorites() = coroutineScope{

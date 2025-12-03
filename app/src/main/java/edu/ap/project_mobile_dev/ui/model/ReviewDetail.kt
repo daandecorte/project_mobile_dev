@@ -1,6 +1,8 @@
 package edu.ap.project_mobile_dev.ui.model
 
 import android.graphics.Bitmap
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
 data class ReviewDetail (
     val docId: String,
