@@ -311,7 +311,9 @@ class ActivityViewModel : ViewModel() {
 
             // Update UI once (not inside loop)
             _uiState.update { it.copy(reviews = reviewList, isReviewsLoading = false, photos = photos) }
+
         } catch (e: Exception) {
+            _uiState.update { it.copy(isReviewsLoading = false) }
             e.printStackTrace()
         }
     }

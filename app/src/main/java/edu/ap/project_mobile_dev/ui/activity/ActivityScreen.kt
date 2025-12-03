@@ -457,12 +457,21 @@ fun ActivityScreen(
                                 Icon(Icons.Default.Add, "Voeg review toe", tint = Color.White)
                             }
                         }
+
                         if(uiState.isReviewsLoading) {
                             Box(
                                 modifier = Modifier.fillMaxSize(),
                             contentAlignment=Alignment.Center
                             ) {
                                 CircularProgressIndicator()
+                            }
+                        }
+                        else if(uiState.reviews.count()==0) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment=Alignment.Center
+                            ) {
+                                Text("Geen reviews gevonden.")
                             }
                         }
                         else {
