@@ -265,7 +265,7 @@ class ActivityViewModel @Inject constructor(
         viewModelScope.launch {
             val photos = mutableListOf<Bitmap>()
             _uiState.update { it.copy(isReviewsLoading = true) }
-
+            reviewRepository.refreshReviews()
             reviewRepository.getReviewsByActivity(uiState.value.activityId).collect { reviews ->
                 val userIds = reviews.map { it.userId }.toSet()
 
@@ -306,7 +306,7 @@ class ActivityViewModel @Inject constructor(
                 }
                 _uiState.update { it.copy(reviews = reviewsDetails, isReviewsLoading = false, photos = photos) }
             }
-            reviewRepository.refreshReviews()
+
 
         }
 

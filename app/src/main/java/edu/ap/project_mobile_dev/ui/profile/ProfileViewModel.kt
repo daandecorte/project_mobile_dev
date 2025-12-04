@@ -97,6 +97,7 @@ class ProfileViewModel @Inject constructor(
 
         try {
             val uid = currentUser?.uid ?: ""
+            reviewRepository.refreshReviews()
             reviewRepository.getReviewsByUser(uid).collect { reviews ->
                 val activityIds = reviews.map { it.activityId }.toSet()
 
@@ -126,55 +127,6 @@ class ProfileViewModel @Inject constructor(
                 }
                 _uiState.update { it.copy(reviews = profileReviews, isReviewsLoaing = false) }
             }
-            reviewRepository.refreshReviews()
-//            val reviewDocs = reviewIds.map { id ->
-//                async {
-//                    collection.document(id).get().await()
-//                }
-//            }.awaitAll()
-//
-//            val validReviews = reviewDocs.filter { it.exists() }
-//
-//            val activityIds = validReviews
-//                .mapNotNull { it.getString("activityId") }
-//                .toSet()
-//
-//            val activityMap = if (activityIds.isNotEmpty()) {
-//                db.collection("activities")
-//                    .whereIn(FieldPath.documentId(), activityIds.toList())
-//                    .get()
-//                    .await()
-//                    .associate { doc ->
-//                        doc.id to (doc.getString("title") ?: "")
-//                    }
-//            } else emptyMap()
-//
-//            val reviewList = validReviews.map { doc ->
-//
-//                val activityTitle = activityMap[doc.getString("activityId")] ?: ""
-//
-//                val rating = (doc.getLong("rating") ?: 0L).toInt()
-//                val description = doc.getString("description") ?: ""
-//
-//                val timestamp = doc.getTimestamp("date") ?: com.google.firebase.Timestamp.now()
-//                val date = timestamp.toDate()
-//                val formattedDate = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-//                    .format(date)
-//
-//                val bitmap = decodeBase64ToBitmap(doc.getString("imageUrl") ?: "")
-//
-//                ReviewProfile(
-//                    activityId = activityTitle,
-//                    rating = rating,
-//                    description = description,
-//                    date = formattedDate,
-//                    bitmap = bitmap,
-//                    likes = 0
-//                )
-//            }
-
-            //_uiState.update { it.copy(reviews = reviewList, isReviewsLoaing = false) }
-
         } catch (e: Exception) {
             e.printStackTrace()
         }
