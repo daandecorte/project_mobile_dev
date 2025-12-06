@@ -30,6 +30,9 @@ class ReviewRepository @Inject constructor(
     fun getReviewsByUser(userId: String): Flow<List<ReviewEntity>> {
         return reviewDao.getReviewsForUser(userId);
     }
+    suspend fun hasLocalReviews(activityId: String): Boolean {
+        return reviewDao.getReviewCountByActivity(activityId) > 0
+    }
     suspend fun refreshReviews() {
         try {
             val snapshot = firestore.collection("reviews").get().await()

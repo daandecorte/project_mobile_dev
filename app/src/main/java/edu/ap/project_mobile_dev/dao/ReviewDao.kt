@@ -20,4 +20,6 @@ interface ReviewDao {
     fun getReviewsForUser(userId: String): Flow<List<ReviewEntity>>
     @Query("SELECT * FROM reviews")
     fun getAll(): Flow<List<ReviewEntity>>
+    @Query("SELECT COUNT(*) FROM reviews WHERE activityId = :activityId")
+    suspend fun getReviewCountByActivity(activityId: String): Int
 }

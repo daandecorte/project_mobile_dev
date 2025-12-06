@@ -31,6 +31,7 @@ import com.google.firebase.firestore.FieldValue
 import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ap.project_mobile_dev.repository.ActivityRepository
 import edu.ap.project_mobile_dev.repository.ReviewRepository
+import edu.ap.project_mobile_dev.repository.UserRepository
 import edu.ap.project_mobile_dev.ui.model.ReviewDetail
 import edu.ap.project_mobile_dev.ui.model.UserInfo
 import kotlinx.coroutines.flow.collect
@@ -46,7 +47,8 @@ import kotlin.math.round
 @HiltViewModel
 class ActivityViewModel @Inject constructor(
     private val reviewRepository: ReviewRepository,
-    private val activityRepository: ActivityRepository
+    private val activityRepository: ActivityRepository,
+    private val userRepository: UserRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ActivityUIState())
     val uiState: StateFlow<ActivityUIState> = _uiState.asStateFlow()
@@ -241,53 +243,71 @@ class ActivityViewModel @Inject constructor(
 
     fun getReviews() {
         viewModelScope.launch {
-            val photos = mutableListOf<Bitmap>()
             _uiState.update { it.copy(isReviewsLoading = true) }
 
+            val hasLocalReviews = reviewRepository.hasLocalReviews(uiState.value.activityId)
+
+            if (!hasLocalReviews) {
+                reviewRepository.refreshReviews()
+            }
+
             reviewRepository.getReviewsByActivity(uiState.value.activityId).collect { reviews ->
+                val photos = mutableListOf<Bitmap>()
                 val userIds = reviews.map { it.userId }.toSet()
 
-                val userMap = if (userIds.isNotEmpty()) {
-                    val userDocs = db.collection("users")
-                        .whereIn(FieldPath.documentId(), userIds.toList())
-                        .get()
-                        .await()
-                    userDocs.associate { doc ->
-                        doc.id to UserInfo(
-                            username = doc.getString("username") ?: "",
-                            profilePicture = doc.getString("profilePicture") ?: ""
-                        )
-                    }
-                } else {
-                    emptyMap()
-                }
+                val roomUsers = userRepository.getUserNamesByUids(userIds.toList())
+                val usernameMap = roomUsers.associate { it.uid to it.username }
+
+                val existingProfilePictures = _uiState.value.reviews.associate {
+                    it.username to it.bitmapPicture
+                }.filterValues { it != null }
 
                 val reviewsDetails = reviews.map { review ->
-                    val userInfo = userMap[review.userId]
-                    val date=review.date.toDate()
+                    val date = review.date.toDate()
                     val formattedDate = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(date)
                     val photoBitmap = decodeBase64ToBitmap(review.imageUrl)
-                    if(photoBitmap!=null) {
-                        photos.add(photoBitmap)
-                    }
+                    if (photoBitmap != null) photos.add(photoBitmap)
+
+                    val username = usernameMap[review.userId] ?: "Unknown"
+
                     ReviewDetail(
-                        docId=review.documentId,
-                        bitmapPicture= decodeBase64ToBitmap(userInfo?.profilePicture ?: ""),
-                        username= userInfo?.username ?: "",
-                        rating= review.rating,
-                        description= review.description,
-                        date=formattedDate,
-                        likes= review.likes.size,
-                        liked= review.likes.contains(review.userId),
+                        docId = review.documentId,
+                        username = username,
+                        bitmapPicture = existingProfilePictures[username],
+                        rating = review.rating,
+                        description = review.description,
+                        date = formattedDate,
+                        likes = review.likes.size,
+                        liked = review.likes.contains(review.userId),
                         bitmap = photoBitmap
                     )
                 }
-                _uiState.update { it.copy(reviews = reviewsDetails, isReviewsLoading = false, photos = photos) }
-            }
 
+                _uiState.update { it.copy(reviews = reviewsDetails, photos = photos, isReviewsLoading = false) }
+
+                launch {
+                    val profileMap = userRepository.refreshUserNames(userIds.toList())
+
+                    val updatedRoomUsers = userRepository.getUserNamesByUids(userIds.toList())
+                    val updatedUsernameMap = updatedRoomUsers.associate { it.uid to it.username }
+
+                    val updatedReviews = _uiState.value.reviews.map { review ->
+                        val userId = reviews.find { it.documentId == review.docId }?.userId
+                        review.copy(
+                            username = if (userId != null) updatedUsernameMap[userId] ?: review.username else review.username,
+                            bitmapPicture = profileMap[userId] ?: review.bitmapPicture
+                        )
+                    }
+                    _uiState.update { it.copy(reviews = updatedReviews) }
+                }
+            }
         }
+
+        // If we had local reviews, refresh in background
         viewModelScope.launch {
-            reviewRepository.refreshReviews()
+            if (reviewRepository.hasLocalReviews(uiState.value.activityId)) {
+                reviewRepository.refreshReviews()
+            }
         }
     }
 

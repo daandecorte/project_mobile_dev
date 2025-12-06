@@ -15,6 +15,7 @@ import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import edu.ap.project_mobile_dev.repository.ActivityRepository
 import edu.ap.project_mobile_dev.repository.ReviewRepository
 import edu.ap.project_mobile_dev.ui.add.Category
 import edu.ap.project_mobile_dev.ui.model.ActivityProfile
@@ -33,6 +34,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlin.String
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 
@@ -41,7 +43,8 @@ sealed class ProfileEvent {
 }
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val reviewRepository: ReviewRepository
+    private val reviewRepository: ReviewRepository,
+    private val activityRepository: ActivityRepository
 ): ViewModel() {
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState
@@ -97,12 +100,9 @@ class ProfileViewModel @Inject constructor(
                 val activityIds = reviews.map { it.activityId }.toSet()
 
                 val activityMap = if (activityIds.isNotEmpty()) {
-                    val activityDocs = db.collection("activities")
-                        .whereIn(FieldPath.documentId(), activityIds.toList())
-                        .get()
-                        .await()
-                    activityDocs.associate { doc ->
-                        doc.id to (doc.getString("title") ?: "")
+                    withContext(Dispatchers.IO) {
+                        activityRepository.getActivitiesByIds(activityIds.toList())
+                            .associate { it.documentId to it.title }
                     }
                 } else {
                     emptyMap()
@@ -129,33 +129,28 @@ class ProfileViewModel @Inject constructor(
     }
 
     suspend fun getFavorites() = coroutineScope{
-        val collection = db.collection("activities")
         _uiState.update { it.copy(favorites = emptyList(), isFavLoading = true) }
         val favouriteIds = _uiState.value.favoritesList
+
         try {
-            val favourites = favouriteIds.map{id->async {
-                collection.document(id).get().await()
-            }}.awaitAll()
-            val validFav = favourites.filter { it.exists() }
-            val favoritesList = validFav
-                .map { doc ->
-                    val location = (doc.getString("street") ?: "") +
-                            " • " +
-                            (doc.getString("city") ?: "")
+            val roomFavorites = withContext(Dispatchers.IO) {
+                activityRepository.getActivitiesByIds(favouriteIds)
+            }
 
-                    ActivityProfile(
-                        activityId = doc.id,
-                        name = doc.getString("title") ?: "",
-                        location = location,
-                        category = Category.valueOf(doc.getString("category") ?: "OTHER")
-                    )
-                }
-            _uiState.update { it.copy(favorites = favoritesList, isFavLoading = false) }
-        }
-        catch (e :Exception) {
+            val favoritesFromRoom = roomFavorites.map { activity ->
+                ActivityProfile(
+                    activityId = activity.documentId,
+                    name = activity.title,
+                    location = "${activity.street} • ${activity.city}",
+                    category = activity.category
+                )
+            }
+
+            _uiState.update { it.copy(favorites = favoritesFromRoom, isFavLoading = false) }
+        } catch (e: Exception) {
             e.printStackTrace()
+            _uiState.update { it.copy(isFavLoading = false) }
         }
-
     }
 
     private val _events = MutableSharedFlow<ProfileEvent>()

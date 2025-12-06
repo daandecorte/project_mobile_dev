@@ -45,6 +45,7 @@ import dagger.hilt.android.HiltAndroidApp
 import dagger.hilt.components.SingletonComponent
 import edu.ap.project_mobile_dev.dao.ActivityDao
 import edu.ap.project_mobile_dev.dao.ReviewDao
+import edu.ap.project_mobile_dev.dao.UserDao
 import edu.ap.project_mobile_dev.database.AppDatabase
 import edu.ap.project_mobile_dev.ui.add.AddScreen
 import edu.ap.project_mobile_dev.ui.activity.ActivityScreen
@@ -209,5 +210,9 @@ object DatabaseModule {
     @Provides
     fun provideReviewDao(database: AppDatabase):  ReviewDao {
         return database.reviewDao()
+    }
+    @Provides
+    fun provideUserDao(database: AppDatabase):  UserDao {
+        return database.userDao()
     }
 }

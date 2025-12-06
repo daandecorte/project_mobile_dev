@@ -30,6 +30,9 @@ class ActivityRepository @Inject constructor(
     fun getActivities() : Flow<List<Activity>> {
         return activityDao.getAll()
     }
+    fun getActivitiesByIds(ids: List<String>): List<Activity> {
+        return activityDao.getActivitiesByDocIds(ids)
+    }
     fun getActivityDetailById(documentId: String): Flow<ActivityDetail> {
         return activityDao.getActivityByDocId(documentId)
             .map { activity ->

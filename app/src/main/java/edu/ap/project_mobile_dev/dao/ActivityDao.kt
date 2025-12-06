@@ -18,4 +18,6 @@ interface ActivityDao {
 
     @Query("select * from activities where documentId = :documentId")
     fun getActivityByDocId(documentId: String): Flow<Activity>
+    @Query("select * from activities where documentId in (:ids)")
+    fun getActivitiesByDocIds(ids: List<String>): List<Activity>
 }
