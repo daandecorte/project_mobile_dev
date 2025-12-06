@@ -114,7 +114,7 @@ fun ActivityScreen(
             .fillMaxSize()
             .background(Color(0xFF0F172A)),
         contentPadding = PaddingValues(0.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(15.dp)
     ) {
         // Header Card
         item {
@@ -434,8 +434,6 @@ fun ActivityScreen(
                     }
                 }
             }
-
-            // About Section
             item {
                 Surface(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -443,6 +441,24 @@ fun ActivityScreen(
                     color = Color(0xFF1E2A3A)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Over deze locatie",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(modifier= Modifier.height(5.dp))
+                        Text(activity.description,color = Color(0xFFB0BEC5))
+                    }
+                }
+            }
+            // About Section
+            item {
+                Surface(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFF1E2A3A)
+                ) {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
