@@ -29,9 +29,11 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import dagger.hilt.android.lifecycle.HiltViewModel
+import edu.ap.project_mobile_dev.repository.ActivityRepository
 import edu.ap.project_mobile_dev.repository.ReviewRepository
 import edu.ap.project_mobile_dev.ui.model.ReviewDetail
 import edu.ap.project_mobile_dev.ui.model.UserInfo
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import org.osmdroid.util.GeoPoint
@@ -43,7 +45,8 @@ import kotlin.math.round
 
 @HiltViewModel
 class ActivityViewModel @Inject constructor(
-    private val reviewRepository: ReviewRepository
+    private val reviewRepository: ReviewRepository,
+    private val activityRepository: ActivityRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ActivityUIState())
     val uiState: StateFlow<ActivityUIState> = _uiState.asStateFlow()
@@ -56,40 +59,15 @@ class ActivityViewModel @Inject constructor(
         }
 
         _uiState.update { it.copy(isLoading = true, errorMessage = null, activityId = documentId) }
-
-        db.collection("activities")
-            .document(documentId)
-            .get()
-            .addOnSuccessListener { doc ->
-                if (doc.exists()) {
-                    val activity = ActivityDetail(
-                        documentId = doc.id,
-                        title = doc.getString("title") ?: "",
-                        description = doc.getString("description") ?: "",
-                        category = Category.valueOf(doc.getString("category") ?: "OTHER"),
-                        location = doc.getString("location") ?: "",
-                        city = doc.getString("city") ?: "",
-                        ratingM = (doc.getString("averageRating")?:"0").toInt(),
-                        ratings = emptyList(),
-                        bitmap = decodeBase64ToBitmap(doc.getString("imageUrl") ?: ""),
-                        lat = doc.getString("lat") ?: "",
-                        lon = doc.getString("lon") ?: "",
-                    )
-                    _uiState.update { it.copy(activity = activity, isLoading = false) }
-
-                    viewModelScope.launch {
-                        getSaved()
-                        getReviews()
-                    }
-                } else {
-                    _uiState.update { it.copy(errorMessage = "No such activity", isLoading = false) }
-                    Log.w("Firestore", "No such document with id: $documentId")
+        viewModelScope.launch {
+            activityRepository.getActivityDetailById(documentId).collect {activity ->
+                _uiState.update { it.copy(activity=activity, isLoading=false) }
+                viewModelScope.launch {
+                    getSaved()
+                    getReviews()
                 }
             }
-            .addOnFailureListener { e ->
-                _uiState.update { it.copy(errorMessage = e.message ?: "Failed to load", isLoading = false) }
-                Log.e("Firestore", "Failed to load activity", e)
-            }
+        }
     }
 
     fun changeSelectedTab(tab: Int){
@@ -261,11 +239,11 @@ class ActivityViewModel @Inject constructor(
         _uiState.update { it.copy(userRating = rating) }
     }
 
-    suspend fun getReviews() {
+    fun getReviews() {
         viewModelScope.launch {
             val photos = mutableListOf<Bitmap>()
             _uiState.update { it.copy(isReviewsLoading = true) }
-            reviewRepository.refreshReviews()
+
             reviewRepository.getReviewsByActivity(uiState.value.activityId).collect { reviews ->
                 val userIds = reviews.map { it.userId }.toSet()
 
@@ -307,70 +285,10 @@ class ActivityViewModel @Inject constructor(
                 _uiState.update { it.copy(reviews = reviewsDetails, isReviewsLoading = false, photos = photos) }
             }
 
-
         }
-
-//        _uiState.update { it.copy(reviews = emptyList(), isReviewsLoading = true) }
-//
-//        val collection = db.collection("reviews")
-//        val photos = mutableListOf<Bitmap>()
-//        try{
-//            val reviews = collection.whereEqualTo("activityId", _uiState.value.activityId).get().await()
-//
-//            val userIds = reviews.mapNotNull { it.getString("userId") }.toSet()
-//            val userDocs = db.collection("users")
-//                .whereIn(FieldPath.documentId(), userIds.toList())
-//                .get()
-//                .await()
-//            val userMap = userDocs.associate { doc ->
-//                doc.id to UserInfo(
-//                    username = doc.getString("username") ?: "",
-//                    profilePicture = doc.getString("profilePicture") ?: ""
-//                )
-//            }
-//            val reviewList = reviews.map { review ->
-//                val userId = review.getString("userId") ?: ""
-//                val userInfo = userMap[userId]
-//
-//                val username = userInfo?.username ?: ""
-//                val bitmapProfile = decodeBase64ToBitmap(userInfo?.profilePicture ?: "")
-//                val rating = (review.getLong("rating") ?: 0L).toInt()
-//                val description = review.getString("description") ?: ""
-//
-//                val timestamp = review.getTimestamp("date") ?: com.google.firebase.Timestamp.now()
-//                val date = timestamp.toDate()
-//                val formattedDate = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-//                    .format(date)
-//
-//                val bitmap = decodeBase64ToBitmap(review.getString("imageUrl") ?: "")
-//                if(bitmap!=null) {
-//                    photos.add(bitmap)
-//                }
-//                val likes = review.get("likes") as? List<String> ?: emptyList()
-//
-//                val uid = FirebaseAuth.getInstance().currentUser?.uid
-//                val liked = likes.contains(uid)
-//
-//                ReviewDetail(
-//                    docId = review.id,
-//                    bitmapPicture = bitmapProfile,
-//                    username = username,
-//                    rating = rating,
-//                    description = description,
-//                    date = formattedDate,
-//                    likes = likes.size,
-//                    bitmap = bitmap,
-//                    liked = liked
-//                )
-//            }
-//
-//            // Update UI once (not inside loop)
-//            _uiState.update { it.copy(reviews = reviewList, isReviewsLoading = false, photos = photos) }
-//
-//        } catch (e: Exception) {
-//            _uiState.update { it.copy(isReviewsLoading = false) }
-//            e.printStackTrace()
-//        }
+        viewModelScope.launch {
+            reviewRepository.refreshReviews()
+        }
     }
 
     private val userUid = FirebaseAuth.getInstance().currentUser?.uid;

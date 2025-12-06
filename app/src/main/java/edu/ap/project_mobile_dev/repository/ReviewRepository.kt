@@ -46,12 +46,7 @@ class ReviewRepository @Inject constructor(
                     activityId =  doc.getString("activityId") ?: ""
                 )
             }
-            Log.d("Reviews", "Fetched ${reviews.size} reviews from Firestore")
-            // ⬅ Write to Room
             reviewDao.insertReviews(reviews)
-            val allActivities = reviewDao.getAll().first()
-            Log.d("Reviews", "Room now has ${allActivities.size} reviews")
-
         } catch (e: Exception) {
             e.printStackTrace()
         }

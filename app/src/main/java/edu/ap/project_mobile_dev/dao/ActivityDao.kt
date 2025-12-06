@@ -1,5 +1,6 @@
 package edu.ap.project_mobile_dev.dao
 
+import android.graphics.Bitmap
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -14,4 +15,7 @@ interface ActivityDao {
 
     @Query("SELECT * FROM activities")
     fun getAll(): Flow<List<Activity>>
+
+    @Query("select * from activities where documentId = :documentId")
+    fun getActivityByDocId(documentId: String): Flow<Activity>
 }

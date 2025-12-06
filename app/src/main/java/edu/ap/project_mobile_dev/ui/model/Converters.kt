@@ -37,4 +37,17 @@ class Converters {
     fun toStringList(data: String?): List<String>? {
         return data?.split(",")?.map { it.trim() } ?: emptyList()
     }
+    @TypeConverter
+    fun fromBitmapToBytes(bitmap: Bitmap?): ByteArray? {
+        if (bitmap == null) return null
+        val outputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+        return outputStream.toByteArray()
+    }
+
+    @TypeConverter
+    fun toBitmapFromBytes(bytes: ByteArray?): Bitmap? {
+        if (bytes == null || bytes.isEmpty()) return null
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    }
 }

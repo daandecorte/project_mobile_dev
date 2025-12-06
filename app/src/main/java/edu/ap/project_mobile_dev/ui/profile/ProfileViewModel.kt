@@ -50,34 +50,34 @@ class ProfileViewModel @Inject constructor(
     private val currentUser = FirebaseAuth.getInstance().currentUser;
 
     fun getUser(){
-        val uid = currentUser?.uid ?: ""
+        val uid = currentUser?.uid ?: return
 
-        db.collection("users").document(uid).get()
-            .addOnSuccessListener { document ->
-                if (document != null && document.exists()){
-                    val username = document.getString("username") ?: ""
-                    val favorites = document.get("favorites") as? List<String> ?: emptyList()
-                    val reviewList = document.get("reviews") as? List<String> ?: emptyList()
+        db.collection("users").document(uid)
+            .addSnapshotListener { doc, error ->
+                if (doc == null || !doc.exists()) return@addSnapshotListener
 
-                    val profileBase64 = document.getString("profilePicture") ?: ""
-                    val profileBitmap = profileBase64?.let { decodeBase64ToBitmap(it) }
+                val username = doc.getString("username") ?: ""
+                val favorites = doc.get("favorites") as? List<String> ?: emptyList()
+                val reviewList = doc.get("reviews") as? List<String> ?: emptyList()
 
-                    _uiState.update { it.copy(
+                val profileBase64 = doc.getString("profilePicture") ?: ""
+                val profileBitmap = decodeBase64ToBitmap(profileBase64)
+
+                _uiState.update {
+                    it.copy(
                         username = username,
                         favoritesList = favorites,
                         reviewList = reviewList,
                         photoBase64 = profileBase64,
                         photoBitmap = profileBitmap
-                    ) }
-
-                    viewModelScope.launch {
-                        getFavorites()
-                        getReviews()
-                    }
-                } else {
-                    // Throw something
+                    )
                 }
-            }.addOnFailureListener { exception -> println("Error fetching user: $exception") }
+
+                viewModelScope.launch {
+                    getFavorites()
+                    getReviews()
+                }
+            }
     }
 
 
@@ -89,15 +89,10 @@ class ProfileViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(username = username)
     }
 
-    suspend fun getReviews() = coroutineScope {
+    fun getReviews() {
         _uiState.update { it.copy(reviews = emptyList(), isReviewsLoaing = true) }
-
-        val reviewIds = _uiState.value.reviewList
-        val collection = db.collection("reviews")
-
-        try {
-            val uid = currentUser?.uid ?: ""
-            reviewRepository.refreshReviews()
+        val uid = currentUser?.uid ?: ""
+        viewModelScope.launch {
             reviewRepository.getReviewsByUser(uid).collect { reviews ->
                 val activityIds = reviews.map { it.activityId }.toSet()
 
@@ -127,10 +122,10 @@ class ProfileViewModel @Inject constructor(
                 }
                 _uiState.update { it.copy(reviews = profileReviews, isReviewsLoaing = false) }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
-
+        viewModelScope.launch {
+            reviewRepository.refreshReviews()
+        }
     }
 
     suspend fun getFavorites() = coroutineScope{

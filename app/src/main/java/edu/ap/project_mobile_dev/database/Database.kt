@@ -13,7 +13,7 @@ import edu.ap.project_mobile_dev.ui.model.ReviewPost
 
 @Database(
     entities = [Activity::class, ReviewEntity::class],
-    version=3
+    version=5
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase: RoomDatabase() {
