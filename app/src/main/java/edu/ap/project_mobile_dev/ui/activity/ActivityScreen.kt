@@ -219,12 +219,23 @@ fun ActivityScreen(
                                 )
                                 .padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
-                            Text(
-                                activity.category.displayName,
-                                color = Color.White,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(start = 2.dp)
+                            ) {
+                                Icon(
+                                    imageVector = activity.category.icon,
+                                    contentDescription = "Icon",
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Text(
+                                    activity.category.displayName,
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 4.dp)
+                                )
+                            }
                         }
                     }
 
@@ -480,7 +491,7 @@ fun ActivityScreen(
                         }
                         else if(uiState.reviews.count()==0) {
                             Box(
-                                modifier = Modifier.fillMaxSize(),
+                                modifier = Modifier.fillMaxSize().height(50.dp),
                                 contentAlignment=Alignment.Center
                             ) {
                                 Text("Geen reviews gevonden.")
