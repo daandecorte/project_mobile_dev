@@ -27,6 +27,7 @@ import java.util.*
 fun ChatScreen(
     id: String,
     onBack: () -> Unit = {},
+    onNavigateToActivity: (String) -> Unit,
     viewModel: ChatViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -158,7 +159,10 @@ fun ChatScreen(
                     items(chatData.messages) { message ->
                         MessageBubble(
                             message = message,
-                            isCurrentUser = viewModel.checkUser(message)
+                            isCurrentUser = viewModel.checkUser(message),
+                            onActivityClick = {activityId->
+                                onNavigateToActivity(activityId)
+                            }
                         )
                     }
                 }
@@ -177,7 +181,8 @@ fun ChatScreen(
 @Composable
 fun MessageBubble(
     message: Message,
-    isCurrentUser: Boolean
+    isCurrentUser: Boolean,
+    onActivityClick:(String)-> Unit
 ) {
     val dateFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
     val timeString = remember(message.dateTime) {
@@ -202,31 +207,26 @@ fun MessageBubble(
             },
             modifier = Modifier.widthIn(max = 280.dp)
         ) {
-            Box(
-                modifier = Modifier.then(
-                    if (isCurrentUser) {
-                        Modifier.background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                    } else Modifier
-                )
-            ){
-                Column(
-                    modifier = Modifier.padding(12.dp)
-                ) {
-                    if (!isCurrentUser) {
-                        Text(
-                            text = message.username,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
+            Column(
+                modifier = Modifier.padding(12.dp)
+            ) {
+                if (!isCurrentUser) {
+                    Text(
+                        text = message.username,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+                if(message.message.startsWith("activityId=")) {
+                    val activityId = message.message.removePrefix("activityId=")
+                    Text("Deelde een activiteit")
+                    Button(onClick = {onActivityClick(activityId)}) {
+                        Text("Bekijk")
                     }
-
+                }
+                else {
                     Text(
                         text = message.message,
                         style = MaterialTheme.typography.bodyMedium,
@@ -236,8 +236,8 @@ fun MessageBubble(
                             MaterialTheme.colorScheme.onSurfaceVariant
                         }
                     )
-
-                    Spacer(modifier = Modifier.height(4.dp))
+                }
+                Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
                         text = timeString,

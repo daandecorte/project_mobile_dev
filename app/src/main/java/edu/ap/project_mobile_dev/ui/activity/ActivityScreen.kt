@@ -36,6 +36,7 @@ import com.google.accompanist.permissions.rememberPermissionState
 import org.osmdroid.util.GeoPoint
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
+import edu.ap.project_mobile_dev.ui.model.ChatOverview
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -46,7 +47,7 @@ fun ActivityScreen(
     viewModel: ActivityViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
+    var shareActivity by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val permissionState = rememberPermissionState(android.Manifest.permission.ACCESS_FINE_LOCATION)
     if (!permissionState.status.isGranted) {
@@ -181,22 +182,37 @@ fun ActivityScreen(
                         Icon(Icons.Default.AccountCircle, contentDescription = "Profiel", tint = Color.White, modifier = Modifier.size(40.dp))
                     }
                 }
-
-                // Heart icon (bottom right)
-                IconButton(
-                    onClick = { viewModel.saveActivity() },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp)
-                        .background(Color(0x80000000), CircleShape)
-                        .size(48.dp)
-                ) {
-                    Icon(
-                        imageVector = if (uiState.saved) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = "Bewaar activiteit",
-                        tint = if (uiState.saved) Color(0xFFFF6B35) else Color.White,
-                        modifier = Modifier.size(28.dp)
-                    )
+                Row(                        modifier = Modifier
+                    .align(Alignment.BottomEnd)) {
+                    IconButton(
+                        onClick = { shareActivity=true },
+                        modifier = Modifier
+                            .padding(vertical=16.dp)
+                            .background(Color(0x80000000), CircleShape)
+                            .size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Deel activiteit",
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                    // Heart icon (bottom right)
+                    IconButton(
+                        onClick = { viewModel.saveActivity() },
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .background(Color(0x80000000), CircleShape)
+                            .size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (uiState.saved) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Bewaar activiteit",
+                            tint = if (uiState.saved) Color(0xFFFF6B35) else Color.White,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 }
 
                 // Bottom section: title + stats
@@ -546,6 +562,16 @@ fun ActivityScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
+    if (shareActivity) {
+        ShareToChatDialog(
+            chats = uiState.userChats,
+            onDismiss = { shareActivity = false },
+            onChatSelected = { chatId ->
+                viewModel.shareActivityToChat(chatId, activityId)
+                shareActivity = false
+            }
+        )
+    }
     if (uiState.showReviewDialog) {
         Dialog(
             onDismissRequest = { viewModel.showReviewDialog(false) }
@@ -836,5 +862,53 @@ private fun PhotoSection(
             }
         }
 
+    }
+}
+@Composable
+fun ShareToChatDialog(
+    chats: List<ChatOverview>,
+    onDismiss: () -> Unit,
+    onChatSelected: (String) -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = Color(0xFF1E2A3A)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    "Kies een chat",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                chats.forEach { chat ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onChatSelected(chat.id) }
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Chat,
+                            contentDescription = null,
+                            tint = Color.White
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Text(chat.name, color = Color.White)
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                TextButton(onClick = onDismiss) {
+                    Text("Annuleren", color = Color(0xFFB0BEC5))
+                }
+            }
+        }
     }
 }
