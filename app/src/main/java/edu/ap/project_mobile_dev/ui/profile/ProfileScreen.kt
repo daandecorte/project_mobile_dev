@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
@@ -477,16 +478,7 @@ fun UserReviewCard(review: ReviewProfile) {
             }
 
             review.bitmap?.let {
-                Image(
-                    bitmap = it.asImageBitmap(),
-                    contentDescription = "Activity image",
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .height(100.dp)
-                        .aspectRatio(it.width.toFloat() / it.height.toFloat())
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop
-                )
+                ZoomableReviewImageDialog(it)
             }
 
             if (review.description.isNotEmpty()) {
@@ -524,6 +516,44 @@ fun UserReviewCard(review: ReviewProfile) {
                     review.likes.toString(),
                     color = Color(0xFFB0BEC5),
                     fontSize = 14.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ZoomableReviewImageDialog(image: Bitmap) {
+    var showDialog by remember { mutableStateOf(false) }
+
+    Image(
+        bitmap = image.asImageBitmap(),
+        contentDescription = "Activity image",
+        modifier = Modifier
+            .height(100.dp)
+            .aspectRatio(image.width.toFloat() / image.height.toFloat())
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { showDialog = true },
+        contentScale = ContentScale.Crop
+    )
+
+    if (showDialog) {
+        Dialog(onDismissRequest = { showDialog = false }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Transparent),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    bitmap = image.asImageBitmap(),
+                    contentDescription = "Photo",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { showDialog = false },
+                    contentScale = ContentScale.Fit
                 )
             }
         }

@@ -1,6 +1,7 @@
 package edu.ap.project_mobile_dev.ui.activity
 
 import android.content.Intent
+import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,6 +27,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
 import coil.compose.rememberAsyncImagePainter
@@ -538,15 +540,8 @@ fun ActivityScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             row.forEach { ph ->
-                                Image(
-                                    bitmap = ph.asImageBitmap(),
-                                    contentDescription = "Photo",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .aspectRatio(1f)
-                                        .clip(RoundedCornerShape(12.dp))
-                                )
+                                ZoomableImageDialog(ph.asImageBitmap(),
+                                    Modifier.weight(1f).aspectRatio(1f))
                             }
 
                             if (row.size == 1) {
@@ -759,15 +754,7 @@ fun ReviewItem(review: ReviewDetail, viewModel: ActivityViewModel) {
         }
 
         review.bitmap?.let {
-            Image(
-                bitmap = it.asImageBitmap(),
-                contentDescription = "Activity image",
-                modifier = Modifier
-                    .height(100.dp)
-                    .aspectRatio(it.width.toFloat() / it.height.toFloat())
-                    .clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.Crop
-            )
+            ZoomableReviewImageDialog(it)
         }
 
         if (review.description.isNotEmpty()) {
@@ -908,6 +895,80 @@ fun ShareToChatDialog(
                 TextButton(onClick = onDismiss) {
                     Text("Annuleren", color = Color(0xFFB0BEC5))
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun ZoomableImageDialog(image: ImageBitmap, modifier: Modifier = Modifier) {
+    var showDialog by remember { mutableStateOf(false) }
+
+    Image(
+        bitmap = image,
+        contentDescription = "Photo",
+        contentScale = ContentScale.Crop,
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { showDialog = true }
+    )
+
+    if (showDialog) {
+        Dialog(onDismissRequest = { showDialog = false }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Transparent),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    bitmap = image,
+                    contentDescription = "Photo",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { showDialog = false },
+                    contentScale = ContentScale.Fit
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ZoomableReviewImageDialog(image: Bitmap) {
+    var showDialog by remember { mutableStateOf(false) }
+
+    Image(
+        bitmap = image.asImageBitmap(),
+        contentDescription = "Activity image",
+        modifier = Modifier
+            .height(100.dp)
+            .aspectRatio(image.width.toFloat() / image.height.toFloat())
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { showDialog = true },
+        contentScale = ContentScale.Crop
+    )
+
+    if (showDialog) {
+        Dialog(onDismissRequest = { showDialog = false }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Transparent),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    bitmap = image.asImageBitmap(),
+                    contentDescription = "Photo",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { showDialog = false },
+                    contentScale = ContentScale.Fit
+                )
             }
         }
     }
