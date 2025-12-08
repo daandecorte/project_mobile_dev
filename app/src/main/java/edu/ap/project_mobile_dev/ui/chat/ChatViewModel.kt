@@ -50,10 +50,10 @@ class ChatViewModel : ViewModel() {
                                         if (error != null || snapshot == null) return@addSnapshotListener
 
                                         val messages = snapshot.documents.mapNotNull { msgDoc ->
-                                            val userId = msgDoc.getString("username") ?: return@mapNotNull null
+                                            val username = msgDoc.getString("username") ?: return@mapNotNull null
                                             val text = msgDoc.getString("message") ?: ""
                                             val timestamp = msgDoc.getTimestamp("dateTime") ?: Timestamp.now()
-                                            Message(username = userId, message = text, dateTime = timestamp)
+                                            Message(username = username, message = text, dateTime = timestamp)
                                         }
 
                                         val chat = Chat(
@@ -68,6 +68,29 @@ class ChatViewModel : ViewModel() {
                                     }
                             }
                     }
+                } else {
+                    chatRef.collection("messages")
+                        .orderBy("dateTime")
+                        .addSnapshotListener { snapshot, error ->
+                            if (error != null || snapshot == null) return@addSnapshotListener
+
+                            val messages = snapshot.documents.mapNotNull { msgDoc ->
+                                val username = msgDoc.getString("username") ?: return@mapNotNull null
+                                val text = msgDoc.getString("message") ?: ""
+                                val timestamp = msgDoc.getTimestamp("dateTime") ?: Timestamp.now()
+                                Message(username = username, message = text, dateTime = timestamp)
+                            }
+
+                            val chat = Chat(
+                                id = chatId,
+                                groupName = groupName ?: "",
+                                users = users,
+                                messages = messages,
+                                newMessage = newMessage
+                            )
+
+                            _uiState.update { it.copy(chat = chat) }
+                        }
                 }
             }
     }

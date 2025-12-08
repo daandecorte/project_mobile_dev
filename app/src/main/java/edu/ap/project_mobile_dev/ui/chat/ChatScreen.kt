@@ -196,46 +196,59 @@ fun MessageBubble(
                 bottomEnd = if (isCurrentUser) 4.dp else 16.dp
             ),
             color = if (isCurrentUser) {
-                MaterialTheme.colorScheme.primaryContainer
+                Color.Transparent
             } else {
                 MaterialTheme.colorScheme.surfaceVariant
             },
             modifier = Modifier.widthIn(max = 280.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(12.dp)
-            ) {
-                if (!isCurrentUser) {
+            Box(
+                modifier = Modifier.then(
+                    if (isCurrentUser) {
+                        Modifier.background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                    } else Modifier
+                )
+            ){
+                Column(
+                    modifier = Modifier.padding(12.dp)
+                ) {
+                    if (!isCurrentUser) {
+                        Text(
+                            text = message.username,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+
                     Text(
-                        text = message.username,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        text = message.message,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (isCurrentUser) {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
                     )
+
                     Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = timeString,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isCurrentUser) {
+                            MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        }
+                    )
                 }
-
-                Text(
-                    text = message.message,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (isCurrentUser) {
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = timeString,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (isCurrentUser) {
-                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                    }
-                )
             }
         }
     }

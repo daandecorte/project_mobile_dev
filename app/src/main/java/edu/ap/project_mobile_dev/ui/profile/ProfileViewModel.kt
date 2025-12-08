@@ -90,7 +90,9 @@ class ProfileViewModel @Inject constructor(
                     .get()
                     .await()
 
-                if(result.isEmpty){
+                val usernameTakenByOther = result.documents.any { it.id != currentUser?.uid }
+
+                if(!usernameTakenByOther){
                     db.collection("users")
                         .document(currentUser?.uid ?: "")
                         .update("username", _uiState.value.editingUsername)
