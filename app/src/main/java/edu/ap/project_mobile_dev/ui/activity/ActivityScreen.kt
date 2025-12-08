@@ -185,7 +185,7 @@ fun ActivityScreen(
                 Row(                        modifier = Modifier
                     .align(Alignment.BottomEnd)) {
                     IconButton(
-                        onClick = { shareActivity=true },
+                        onClick = { shareActivity = true },
                         modifier = Modifier
                             .padding(vertical=16.dp)
                             .background(Color(0x80000000), CircleShape)
