@@ -131,6 +131,9 @@ class MainActivity : ComponentActivity() {
                             ChatScreen(
                                 id,
                                 onBack = { navController.popBackStack() },
+                                onNavigateToActivity = {activityId->
+                                    navController.navigate("activity/$activityId")
+                                }
                             )
                         }
                     }

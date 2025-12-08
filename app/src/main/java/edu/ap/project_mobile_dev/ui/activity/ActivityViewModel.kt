@@ -13,6 +13,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.tasks.Task
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,11 +26,14 @@ import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ap.project_mobile_dev.repository.ActivityRepository
 import edu.ap.project_mobile_dev.repository.ReviewRepository
 import edu.ap.project_mobile_dev.repository.UserRepository
+import edu.ap.project_mobile_dev.ui.model.ChatOverview
+import edu.ap.project_mobile_dev.ui.model.Message
 import edu.ap.project_mobile_dev.ui.model.ReviewDetail
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -308,18 +313,83 @@ class ActivityViewModel @Inject constructor(
 
     private val userUid = FirebaseAuth.getInstance().currentUser?.uid;
 
-    fun getSaved(){
-        val doc = db.collection("users").document(userUid ?: "")
+    fun getSaved() {
+        val uid = userUid ?: return
+        val usersRef = db.collection("users")
+        val chatsRef = db.collection("chats")
 
-        doc.get()
+        usersRef.document(uid).get()
             .addOnSuccessListener { document ->
-                val favorites = document.get("favorites") as? List<String> ?: emptyList()
+                val favorites = (document.get("favorites") as? List<*>)
+                    ?.filterIsInstance<String>() ?: emptyList()
+                val userName = document.getString("username") ?: ""
+                val chatIds = (document.get("chats") as? List<*>)
+                    ?.filterIsInstance<String>() ?: emptyList()
 
-                if(favorites.contains(uiState.value.activityId)){
-                    _uiState.update { it.copy(saved = true) }
+                if (chatIds.isEmpty()) {
+                    _uiState.update { it.copy(saved = favorites.contains(it.activityId)) }
+                    return@addOnSuccessListener
                 }
+
+                chatsRef.whereIn(FieldPath.documentId(), chatIds)
+                    .get()
+                    .addOnSuccessListener { snapshot ->
+
+                        // Collect asynchronous tasks
+                        val chatTasks = snapshot.documents.map { chatDoc ->
+                            val groupName = chatDoc.getString("groupName") ?: ""
+                            val participants = chatDoc.get("users") as? List<String> ?: emptyList()
+
+                            if (groupName.isNotBlank()) {
+                                // Group chat → immediate result
+                                Tasks.forResult(
+                                    ChatOverview(
+                                        id = chatDoc.id,
+                                        name = groupName
+                                    )
+                                )
+                            } else {
+                                // Direct message → fetch the other user's name
+                                val otherUserId = participants.firstOrNull { it != uid }
+
+                                if (otherUserId == null) {
+                                    Tasks.forResult(
+                                        ChatOverview(
+                                            id = chatDoc.id,
+                                            name = "Onbekende gebruiker"
+                                        )
+                                    )
+                                } else {
+                                    // Fetch other user's document
+                                    usersRef.document(otherUserId)
+                                        .get()
+                                        .continueWith { t ->
+                                            val uDoc = t.result
+                                            ChatOverview(
+                                                id = chatDoc.id,
+                                                name = uDoc?.getString("username") ?: "Onbekend"
+                                            )
+                                        }
+                                }
+                            }
+                        }
+
+                        // Wait for all async tasks to finish
+                        Tasks.whenAllSuccess<ChatOverview>(chatTasks)
+                            .addOnSuccessListener { chatList ->
+                                _uiState.update {
+                                    it.copy(
+                                        saved = favorites.contains(it.activityId),
+                                        userChats = chatList,
+                                        currentUserName = userName
+                                    )
+                                }
+                            }
+                    }
             }
     }
+
+
 
     fun saveActivity(){
         val doc = db.collection("users").document(userUid ?: "")
@@ -396,5 +466,17 @@ class ActivityViewModel @Inject constructor(
     }
     fun degreesToRadians(degrees: Double): Double {
         return degrees * Math.PI / 180;
+    }
+    fun shareActivityToChat(chatId: String, activityId: String) {
+        val message = Message(
+            username = uiState.value.currentUserName,
+            message = "activityId=${activityId}",
+            dateTime = Timestamp.now()
+        )
+
+        db.collection("chats")
+            .document(chatId)
+            .collection("messages")
+            .add(message)
     }
 }

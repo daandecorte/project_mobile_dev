@@ -27,6 +27,7 @@ import java.util.*
 fun ChatScreen(
     id: String,
     onBack: () -> Unit = {},
+    onNavigateToActivity: (String) -> Unit,
     viewModel: ChatViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -158,7 +159,10 @@ fun ChatScreen(
                     items(chatData.messages) { message ->
                         MessageBubble(
                             message = message,
-                            isCurrentUser = viewModel.checkUser(message)
+                            isCurrentUser = viewModel.checkUser(message),
+                            onActivityClick = {activityId->
+                                onNavigateToActivity(activityId)
+                            }
                         )
                     }
                 }
@@ -177,7 +181,8 @@ fun ChatScreen(
 @Composable
 fun MessageBubble(
     message: Message,
-    isCurrentUser: Boolean
+    isCurrentUser: Boolean,
+    onActivityClick:(String)-> Unit
 ) {
     val dateFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
     val timeString = remember(message.dateTime) {
@@ -214,17 +219,24 @@ fun MessageBubble(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                 }
-
-                Text(
-                    text = message.message,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (isCurrentUser) {
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                if(message.message.startsWith("activityId=")) {
+                    val activityId = message.message.removePrefix("activityId=")
+                    Text("Deelde een activiteit")
+                    Button(onClick = {onActivityClick(activityId)}) {
+                        Text("Bekijk")
                     }
-                )
-
+                }
+                else {
+                    Text(
+                        text = message.message,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (isCurrentUser) {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                    )
+                }
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
