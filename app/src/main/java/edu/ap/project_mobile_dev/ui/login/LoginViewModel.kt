@@ -16,6 +16,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import edu.ap.project_mobile_dev.R
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.util.UUID
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 
 class LoginViewModel: ViewModel() {
     val auth = FirebaseAuth.getInstance()
@@ -66,25 +70,28 @@ class LoginViewModel: ViewModel() {
                     val firebaseUser = auth.currentUser
                     val uid = firebaseUser?.uid ?: return@addOnCompleteListener
 
-                    val user = mapOf(
-                        "username" to "",
-                        "favorites" to emptyList<String>(),
-                        "reviews" to emptyList<String>(),
-                    )
+                    viewModelScope.launch {
+                        val uniqueUsername = generateUniqueUsername()
 
-                    db.collection("users")
-                        .document(uid)
-                        .set(user)
-                        .addOnSuccessListener {
-                            _uiState.value = _uiState.value.copy(isLoading = false, success = true)
-                        }
-                        .addOnFailureListener { e ->
-                            _uiState.value = _uiState.value.copy(
-                                isLoading = false,
-                                errorMessage = "Firestore error: ${e.message}"
+                        db.collection("users")
+                            .document(uid)
+                            .set(
+                                mapOf(
+                                    "username" to uniqueUsername,
+                                    "favorites" to emptyList<String>(),
+                                    "reviews" to emptyList<String>(),
+                                )
                             )
-                        }
-
+                            .addOnSuccessListener {
+                                _uiState.value = _uiState.value.copy(isLoading = false, success = true)
+                            }
+                            .addOnFailureListener { e ->
+                                _uiState.value = _uiState.value.copy(
+                                    isLoading = false,
+                                    errorMessage = "Firestore error: ${e.message}"
+                                )
+                            }
+                    }
                 } else {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -93,6 +100,22 @@ class LoginViewModel: ViewModel() {
                 }
             }
     }
+
+    suspend fun generateUniqueUsername(): String {
+        while (true) {
+            val username = "user${UUID.randomUUID().toString().take(9)}"
+
+            val result = db.collection("users")
+                .whereEqualTo("username", username)
+                .get()
+                .await()
+
+            if (result.isEmpty) {
+                return username
+            }
+        }
+    }
+
 
     fun logout(activity: MainActivity? = null) {
         auth.signOut()
@@ -153,19 +176,23 @@ class LoginViewModel: ViewModel() {
                 if (doc.exists()) {
                     callback(true, null)
                 } else {
-                    val user = hashMapOf(
-                        "username" to "",
-                        "favorites" to emptyList<String>(),
-                        "reviews" to emptyList<String>()
-                    )
+                    viewModelScope.launch {
+                        val uniqueUsername = generateUniqueUsername()
 
-                    userRef.set(user, SetOptions.merge())
-                        .addOnSuccessListener {
-                            callback(true, null)
-                        }
-                        .addOnFailureListener { e ->
-                            callback(false, e.message)
-                        }
+                        val user = mapOf(
+                            "username" to uniqueUsername,
+                            "favorites" to emptyList<String>(),
+                            "reviews" to emptyList<String>(),
+                        )
+
+                        userRef.set(user, SetOptions.merge())
+                            .addOnSuccessListener {
+                                callback(true, null)
+                            }
+                            .addOnFailureListener { e ->
+                                callback(false, e.message)
+                            }
+                    }
                 }
             }
             .addOnFailureListener { e ->

@@ -53,7 +53,6 @@ fun ProfileScreen(
     }
 
     var selectedTab by remember { mutableStateOf(0) }
-    var isEditingUsername by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -146,13 +145,13 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Username section
-                        if (isEditingUsername) {
+                        if (uiState.isEditingUsername) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 OutlinedTextField(
-                                    value = uiState.username,
+                                    value = uiState.editingUsername,
                                     onValueChange = { viewModel.changeUsername(it) },
                                     modifier = Modifier
                                         .weight(1f)
@@ -169,7 +168,6 @@ fun ProfileScreen(
                                     singleLine = true
                                 )
                                 IconButton(onClick = {
-                                    isEditingUsername = false
                                     viewModel.changeDBUsername()
                                 }) {
                                     Icon(
@@ -190,7 +188,7 @@ fun ProfileScreen(
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
                                 )
-                                IconButton(onClick = { isEditingUsername = true }) {
+                                IconButton(onClick = { viewModel.editUsername() }) {
                                     Icon(
                                         Icons.Default.Edit,
                                         contentDescription = "Bewerk naam",
@@ -322,7 +320,7 @@ fun ProfileScreen(
                 }
             }
         } else {
-            if(uiState.isReviewsLoaing) {
+            if(uiState.isReviewsLoading) {
                 item {
                     Box(
                         modifier = Modifier.fillMaxSize(),

@@ -27,6 +27,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlin.String
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
@@ -62,6 +63,7 @@ class ProfileViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         username = username,
+                        editingUsername = username,
                         favoritesList = favorites,
                         reviewList = reviewList,
                         photoBase64 = profileBase64,
@@ -76,17 +78,36 @@ class ProfileViewModel @Inject constructor(
             }
     }
 
+    fun editUsername(){
+        _uiState.update { it.copy(isEditingUsername = true) }
+    }
 
     fun changeDBUsername(){
-        db.collection("users").document(currentUser?.uid ?: "").update("username", _uiState.value.username)
+        if(uiState.value.editingUsername.trim().length >= 4){
+            viewModelScope.launch {
+                val result = db.collection("users")
+                    .whereEqualTo("username", uiState.value.editingUsername)
+                    .get()
+                    .await()
+
+                if(result.isEmpty){
+                    db.collection("users")
+                        .document(currentUser?.uid ?: "")
+                        .update("username", _uiState.value.editingUsername)
+                        .addOnSuccessListener {
+                            _uiState.update { it.copy(username = uiState.value.editingUsername, isEditingUsername = false) }
+                        }
+                }
+            }
+        }
     }
 
     fun changeUsername(username: String) {
-        _uiState.value = _uiState.value.copy(username = username)
+        _uiState.value = _uiState.value.copy(editingUsername = username)
     }
 
     fun getReviews() {
-        _uiState.update { it.copy(reviews = emptyList(), isReviewsLoaing = true) }
+        _uiState.update { it.copy(reviews = emptyList(), isReviewsLoading = true) }
         val uid = currentUser?.uid ?: ""
         viewModelScope.launch {
             reviewRepository.getReviewsByUser(uid).collect { reviews ->
@@ -113,7 +134,7 @@ class ProfileViewModel @Inject constructor(
                         likes = review.likes.size
                     )
                 }
-                _uiState.update { it.copy(reviews = profileReviews, isReviewsLoaing = false) }
+                _uiState.update { it.copy(reviews = profileReviews, isReviewsLoading = false) }
             }
         }
         viewModelScope.launch {
