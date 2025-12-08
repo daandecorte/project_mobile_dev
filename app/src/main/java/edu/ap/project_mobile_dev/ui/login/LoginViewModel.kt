@@ -1,15 +1,11 @@
 package edu.ap.project_mobile_dev.ui.login
 
 import android.content.Intent
-import android.provider.ContactsContract
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.firebase.auth.auth
-import com.google.firebase.Firebase
-import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.auth.FirebaseAuth
@@ -42,14 +38,14 @@ class LoginViewModel: ViewModel() {
             _uiState.value = _uiState.value.copy(errorMessage = "Vul alle velden in!")
             return
         }
-        _uiState.value = _uiState.value.copy(isloading = true, errorMessage = null)
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 _uiState.value= if(task.isSuccessful) {
-                    _uiState.value.copy(isloading = false, success = true)
+                    _uiState.value.copy(isLoading = false, success = true)
                 } else {
-                    _uiState.value.copy(isloading = false, errorMessage = task.exception?.message ?: "Login failed")
+                    _uiState.value.copy(isLoading = false, errorMessage = task.exception?.message ?: "Login failed")
                 }
             }
     }
@@ -62,7 +58,7 @@ class LoginViewModel: ViewModel() {
             return
         }
 
-        _uiState.value = _uiState.value.copy(isloading = true, errorMessage = null)
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
@@ -80,18 +76,18 @@ class LoginViewModel: ViewModel() {
                         .document(uid)
                         .set(user)
                         .addOnSuccessListener {
-                            _uiState.value = _uiState.value.copy(isloading = false, success = true)
+                            _uiState.value = _uiState.value.copy(isLoading = false, success = true)
                         }
                         .addOnFailureListener { e ->
                             _uiState.value = _uiState.value.copy(
-                                isloading = false,
+                                isLoading = false,
                                 errorMessage = "Firestore error: ${e.message}"
                             )
                         }
 
                 } else {
                     _uiState.value = _uiState.value.copy(
-                        isloading = false,
+                        isLoading = false,
                         errorMessage = task.exception?.message ?: "Registratie mislukt"
                     )
                 }

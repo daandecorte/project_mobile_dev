@@ -1,6 +1,5 @@
 package edu.ap.project_mobile_dev.ui.login
 
-import android.app.Activity
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -33,8 +32,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
 import edu.ap.project_mobile_dev.MainActivity
 import edu.ap.project_mobile_dev.R
 
@@ -49,7 +46,7 @@ fun LoginScreen(
         onLoginSuccess()
     }
 
-    if (state.isloading) {
+    if (state.isLoading) {
         CircularProgressIndicator()
     }
 

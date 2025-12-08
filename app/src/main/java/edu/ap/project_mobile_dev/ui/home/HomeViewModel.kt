@@ -2,24 +2,17 @@ package edu.ap.project_mobile_dev.ui.home
 
 import android.content.pm.PackageManager
 import android.location.Geocoder
-import android.util.Log
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.toLowerCase
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.LocationServices
-import com.google.api.Context
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import edu.ap.project_mobile_dev.repository.ActivityRepository
-import edu.ap.project_mobile_dev.ui.add.Category
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import edu.ap.project_mobile_dev.ui.model.ActivityPost
-import edu.ap.project_mobile_dev.ui.model.Activity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -28,7 +21,6 @@ import org.osmdroid.util.GeoPoint
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.math.pow
-import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 @HiltViewModel

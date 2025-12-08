@@ -3,12 +3,9 @@ package edu.ap.project_mobile_dev.ui.chat
 import androidx.lifecycle.ViewModel
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import edu.ap.project_mobile_dev.ui.model.Chat
-import edu.ap.project_mobile_dev.ui.model.ChatChats
 import edu.ap.project_mobile_dev.ui.model.Message
-import edu.ap.project_mobile_dev.ui.model.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

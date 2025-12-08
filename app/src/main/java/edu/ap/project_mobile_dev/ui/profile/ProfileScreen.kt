@@ -35,7 +35,6 @@ import edu.ap.project_mobile_dev.MainActivity
 import edu.ap.project_mobile_dev.ui.login.LoginViewModel
 import edu.ap.project_mobile_dev.ui.model.ActivityProfile
 import edu.ap.project_mobile_dev.ui.model.ReviewProfile
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

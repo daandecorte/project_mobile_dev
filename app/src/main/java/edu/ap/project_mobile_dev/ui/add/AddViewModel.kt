@@ -14,7 +14,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
-import edu.ap.project_mobile_dev.ui.model.Activity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,14 +24,12 @@ import kotlinx.coroutines.tasks.await
 import java.io.ByteArrayOutputStream
 import androidx.core.graphics.scale
 import com.google.android.gms.location.LocationServices
-import com.google.firebase.firestore.GeoPoint
 import edu.ap.project_mobile_dev.retrofit.Entry
 import edu.ap.project_mobile_dev.retrofit.RetrofitClient
 import edu.ap.project_mobile_dev.ui.model.ActivityPost
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import retrofit2.Retrofit
 import java.util.Locale
 
 class AddViewModel : ViewModel() {

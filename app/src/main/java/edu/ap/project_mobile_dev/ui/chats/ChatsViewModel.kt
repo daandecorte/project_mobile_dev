@@ -8,7 +8,6 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.type.DateTime
 import edu.ap.project_mobile_dev.ui.model.ChatChats
 import edu.ap.project_mobile_dev.ui.model.ChatPost
 import edu.ap.project_mobile_dev.ui.model.Message
@@ -17,7 +16,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import java.sql.Date
 import java.text.SimpleDateFormat
 import java.util.Locale
 

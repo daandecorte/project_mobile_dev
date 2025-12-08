@@ -3,10 +3,8 @@ package edu.ap.project_mobile_dev.ui.map
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.graphics.LightingColorFilter
 import android.graphics.drawable.BitmapDrawable
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,18 +41,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
 import edu.ap.project_mobile_dev.ui.home.HomeViewModel
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import org.osmdroid.tileprovider.tilesource.XYTileSource
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import edu.ap.project_mobile_dev.R
-import edu.ap.project_mobile_dev.ui.home.HomeScreen
 import edu.ap.project_mobile_dev.ui.model.Activity
 
 @SuppressLint("PermissionLaunchedDuringComposition")

@@ -1,6 +1,5 @@
 package edu.ap.project_mobile_dev.ui.home
 
-import android.location.Geocoder
 import edu.ap.project_mobile_dev.ui.model.Activity
 import org.osmdroid.util.GeoPoint
 
