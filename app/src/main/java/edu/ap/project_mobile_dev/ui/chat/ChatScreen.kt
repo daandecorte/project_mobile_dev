@@ -182,7 +182,7 @@ fun ChatScreen(
 fun MessageBubble(
     message: Message,
     isCurrentUser: Boolean,
-    onActivityClick:(String)-> Unit
+    onActivityClick: (String) -> Unit
 ) {
     val dateFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
     val timeString = remember(message.dateTime) {
@@ -205,7 +205,25 @@ fun MessageBubble(
             } else {
                 MaterialTheme.colorScheme.surfaceVariant
             },
-            modifier = Modifier.widthIn(max = 280.dp)
+            modifier = Modifier
+                .widthIn(max = 280.dp)
+                .then(
+                    if (isCurrentUser) {
+                        Modifier.background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(Color(0xFFFF6B35), Color(0xFFFF4757))
+                            ),
+                            shape = RoundedCornerShape(
+                                topStart = 16.dp,
+                                topEnd = 16.dp,
+                                bottomStart = 16.dp,
+                                bottomEnd = 4.dp
+                            )
+                        )
+                    } else {
+                        Modifier
+                    }
+                )
         ) {
             Column(
                 modifier = Modifier.padding(12.dp)
@@ -217,33 +235,43 @@ fun MessageBubble(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
                 }
-                if(message.message.startsWith("activityId=")) {
+
+                if (message.message.startsWith("activityId=")) {
                     val activityId = message.message.removePrefix("activityId=")
-                    Text("Deelde een activiteit")
-                    Button(onClick = {onActivityClick(activityId)}) {
-                        Text("Bekijk")
+                    Text(
+                        text = "Deelde een activiteit:",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (isCurrentUser) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Button(
+                        onClick = { onActivityClick(activityId) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isCurrentUser) Color.White.copy(alpha = 0.2f) else MaterialTheme.colorScheme.primary
+                        ),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+                        modifier = Modifier.heightIn(min = 32.dp)
+                    ) {
+                        Text(
+                            text = "Bekijk",
+                            color = if (isCurrentUser) Color.White else MaterialTheme.colorScheme.onPrimary
+                        )
                     }
-                }
-                else {
+                } else {
                     Text(
                         text = message.message,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (isCurrentUser) {
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        }
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isCurrentUser) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Spacer(modifier = Modifier.height(4.dp))
+
+                Spacer(modifier = Modifier.height(3.dp))
 
                 Text(
                     text = timeString,
                     style = MaterialTheme.typography.labelSmall,
                     color = if (isCurrentUser) {
-                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        Color.White.copy(alpha = 0.7f)
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     }
