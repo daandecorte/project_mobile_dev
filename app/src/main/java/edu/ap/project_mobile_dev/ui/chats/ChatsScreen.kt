@@ -488,7 +488,13 @@ fun Chat(
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                if (chat.lastMessage.username != "" && chat.lastMessage.message != "") {
+                if (chat.lastMessage.message.startsWith("activityId=")){
+                    Text(
+                        text = "${chat.lastMessage.username} heeft een activiteit gedeeld",
+                        fontSize = 14.sp,
+                        color = if (hasNew) Color.Black else Color(0xFFB0BEC5)
+                    )
+                } else if (chat.lastMessage.username != "" && chat.lastMessage.message != "") {
                     Text(
                         text = "${chat.lastMessage.username}: ${chat.lastMessage.message}",
                         maxLines = 1,
