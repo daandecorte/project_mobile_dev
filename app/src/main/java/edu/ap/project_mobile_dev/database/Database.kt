@@ -15,7 +15,7 @@ import edu.ap.project_mobile_dev.ui.model.UserEntity
 
 @Database(
     entities = [Activity::class, ReviewEntity::class, UserEntity::class],
-    version=8
+    version=9
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase: RoomDatabase() {
